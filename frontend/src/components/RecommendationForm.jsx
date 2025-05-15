@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useContext } from 'react'
 import axios from 'axios'
 import { LanguageContext } from '../context/LanguageContext'
@@ -230,15 +229,45 @@ function RecommendationForm() {
     setLoading(true)
     setError(null)
     setPrediction(null)
-
+    setShowResults(false)
+    
     try {
-      const response = await axios.post(`${import.meta.env.VITE_RECOMMEND_API}/predict_crop`, formData);
-      setPrediction(response.data.crop)
-      setShowResults(true)
+      // Get API URL from environment with fallback
+      const apiBaseUrl = import.meta.env.VITE_RECOMMEND_API || "https://crop-recommendation-api-393g.onrender.com";
+      console.log("Submitting form data to:", `${apiBaseUrl}/predict_crop`);
+      console.log("Form data:", formData);
+      
+      const response = await axios.post(`${apiBaseUrl}/predict_crop`, formData, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true,
+        timeout: 15000
+      });
+      
+      console.log("API response:", response.data);
+      
+      if (response.data && response.data.crop) {
+        setPrediction(response.data.crop);
+        setShowResults(true);
+      } else {
+        throw new Error("Invalid response format from API");
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred while processing your request')
+      console.error("API Error:", err);
+      
+      // Better error handling with specific messages
+      if (err.code === 'ECONNABORTED') {
+        setError('Request timed out. The server might be down or overloaded.');
+      } else if (err.message.includes('Network Error')) {
+        setError('Network error. Please check your internet connection or the server may be unavailable.');
+      } else if (err.response) {
+        setError(err.response.data?.error || `Server error: ${err.response.status}`);
+      } else {
+        setError(err.message || 'An error occurred while processing your request');
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -352,7 +381,7 @@ function RecommendationForm() {
                   value={formData.P}
                   onChange={handleChange}
                   placeholder="5-145"
-                                    className={getInputClass('P')}
+                  className={getInputClass('P')}
                   required
                 />
                 <small className="input-help">{t.phosphorusRange}</small>
