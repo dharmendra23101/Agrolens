@@ -8,7 +8,7 @@ import logging
 app = Flask(__name__)
 
 # Enable CORS for your frontend origin only
-CORS(app, resources={r"/predict_yield": {"origins": "https://agrolens-gamma.vercel.app"}}, supports_credentials=True)
+CORS(app, origins=["https://agrolens-gamma.vercel.app"])
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
