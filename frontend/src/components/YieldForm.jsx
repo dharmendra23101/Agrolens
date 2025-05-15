@@ -1,8 +1,14 @@
-
 // import { useState, useEffect, useContext } from 'react'
 // import axios from 'axios'
 // import { LanguageContext } from '../context/LanguageContext'
 
+<<<<<<< HEAD
+// import { useState, useEffect, useContext } from 'react'
+// import axios from 'axios'
+// import { LanguageContext } from '../context/LanguageContext'
+
+=======
+>>>>>>> 5982f0a (Fix CORS: added localhost and vercel frontend to origins)
 // function YieldForm() {
 //   const { language, isHindi } = useContext(LanguageContext)
   
@@ -2187,7 +2193,12 @@ ${getBestSellingWindow(true)}
     
     try {
       console.log("Submitting form data:", formData);
+<<<<<<< HEAD
       const response = await axios.post(`${import.meta.env.VITE_YIELD_API}/predict`, formData);
+=======
+      const response = await axios.post("https://yield-prediction-api.onrender.com/predict", formData);
+
+>>>>>>> 5982f0a (Fix CORS: added localhost and vercel frontend to origins)
       console.log("API response:", response.data);
       
       if (response.data && response.data.prediction) {
