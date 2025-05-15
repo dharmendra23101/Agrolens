@@ -1,6 +1,4 @@
-
-
-import { useState, useEffect, useContext, useRef } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import axios from 'axios'
 import { LanguageContext } from '../context/LanguageContext'
 
@@ -22,10 +20,6 @@ function YieldForm() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
   const [validationError, setValidationError] = useState(null)
-  const [insights, setInsights] = useState({})
-  const [selectedOption, setSelectedOption] = useState(null)
-  const [isInsightsLoading, setIsInsightsLoading] = useState(false)
-  const insightsRef = useRef(null)
 
   // Translations
   const translations = {
@@ -123,39 +117,7 @@ function YieldForm() {
       fertilizerInfo: "Fertilizer Usage",
       fertilizerDescription: "Proper fertilization can increase yields by 30-50% by providing essential nutrients to crops.",
       irrigationInfo: "Irrigation",
-      irrigationDescription: "Consistent irrigation reduces dependence on rainfall and can dramatically improve yields in drier regions.",
-      
-      // Insights section
-      insightsTitle: "Smart Yield Insights",
-      loadingInsights: "Analyzing your data...",
-      yieldQuality: "Yield Quality",
-      profitPotential: "Profit Potential",
-      resourceEfficiency: "Resource Efficiency",
-      marketTiming: "Market Timing",
-      riskFactors: "Risk Factors",
-      optimizationTip: "Optimization Tip",
-      
-      // Ratings and values
-      excellent: "Excellent",
-      good: "Good",
-      average: "Average",
-      fair: "Fair",
-      poor: "Poor",
-      optimal: "Optimal",
-      suboptimal: "Suboptimal",
-      high: "High",
-      medium: "Medium",
-      low: "Low",
-      
-      // Options
-      askMeAbout: "Ask me about:",
-      optionIncrease: "How to increase yield?",
-      optionRisks: "What are the main risks?",
-      optionHarvest: "Best harvest window?",
-      optionStorage: "Storage considerations",
-      optionAlternatives: "Alternative crops",
-      optionMarket: "Market outlook",
-      backToOptions: "Back to options"
+      irrigationDescription: "Consistent irrigation reduces dependence on rainfall and can dramatically improve yields in drier regions."
     },
     hindi: {
       // Step labels
@@ -251,773 +213,19 @@ function YieldForm() {
       fertilizerInfo: "उर्वरक का उपयोग",
       fertilizerDescription: "फसलों को आवश्यक पोषक तत्व प्रदान करके उचित उर्वरण उपज को 30-50% तक बढ़ा सकता है।",
       irrigationInfo: "सिंचाई",
-      irrigationDescription: "निरंतर सिंचाई वर्षा पर निर्भरता कम करती है और शुष्क क्षेत्रों में उपज में नाटकीय रूप से सुधार कर सकती है।",
-      
-      // Insights section
-      insightsTitle: "स्मार्ट उपज अंतर्दृष्टि",
-      loadingInsights: "आपका डेटा विश्लेषण किया जा रहा है...",
-      yieldQuality: "उपज गुणवत्ता",
-      profitPotential: "लाभ क्षमता",
-      resourceEfficiency: "संसाधन दक्षता",
-      marketTiming: "बाजार समय",
-      riskFactors: "जोखिम कारक",
-      optimizationTip: "अनुकूलन टिप",
-      
-      // Ratings and values
-      excellent: "उत्कृष्ट",
-      good: "अच्छा",
-      average: "औसत",
-      fair: "उचित",
-      poor: "कमज़ोर",
-      optimal: "इष्टतम",
-      suboptimal: "उप-इष्टतम",
-      high: "उच्च",
-      medium: "मध्यम",
-      low: "निम्न",
-      
-      // Options
-      askMeAbout: "मुझसे पूछें:",
-      optionIncrease: "उपज कैसे बढ़ाएं?",
-      optionRisks: "मुख्य जोखिम क्या हैं?",
-      optionHarvest: "सर्वोत्तम कटाई अवधि?",
-      optionStorage: "भंडारण विचार",
-      optionAlternatives: "वैकल्पिक फसलें",
-      optionMarket: "बाजार दृष्टिकोण",
-      backToOptions: "विकल्पों पर वापस जाएं"
+      irrigationDescription: "निरंतर सिंचाई वर्षा पर निर्भरता कम करती है और शुष्क क्षेत्रों में उपज में नाटकीय रूप से सुधार कर सकती है।"
     }
-  };
+  }
 
-  const t = isHindi ? translations.hindi : translations.english;
+  const t = isHindi ? translations.hindi : translations.english
 
-  // Generate insights when prediction is set
+  // Debug log to track state changes
   useEffect(() => {
-    if (prediction) {
-      generateInsights();
-    }
-  }, [prediction]);
+    console.log("Current step:", step);
+    console.log("Prediction:", prediction);
+    console.log("Error:", error);
+  }, [step, prediction, error]);
 
-  // Scroll to insights when they change
-  useEffect(() => {
-    if (insightsRef.current && Object.keys(insights).length > 0) {
-      insightsRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [insights]);
-
-  // Generate insights for yield prediction
-  const generateInsights = () => {
-    setIsInsightsLoading(true);
-    
-    // Simulate API call with setTimeout
-    setTimeout(() => {
-      // Generate insights based on prediction and form data
-      const insightsData = {
-        yieldQuality: getYieldQuality(),
-        profitPotential: getProfitPotential(),
-        resourceEfficiency: getResourceEfficiency(),
-        marketTiming: getMarketTiming(),
-        riskFactors: getRiskLevel(),
-        optimizationTip: getOptimizationTip()
-      };
-      
-      setInsights(insightsData);
-      setIsInsightsLoading(false);
-    }, 1200);
-  };
-  
-  // Calculate yield quality based on inputs
-  const getYieldQuality = () => {
-    // Logic to determine yield quality
-    const predictedYield = parseFloat(prediction);
-    
-    if (predictedYield > 4.5) return "excellent";
-    if (predictedYield > 3.5) return "good";
-    if (predictedYield > 2.5) return "average";
-    if (predictedYield > 1.5) return "fair";
-    return "poor";
-  };
-  
-  // Calculate profit potential
-  const getProfitPotential = () => {
-    // Logic to determine profit potential
-    const weather = formData.weather;
-    const fertilizer = formData.fertilizer === "Yes";
-    const irrigation = formData.irrigation === "Yes";
-    
-    if ((weather === "Sunny" || weather === "Cloudy") && fertilizer && irrigation) {
-      return "high";
-    }
-    if (fertilizer || irrigation) {
-      return "medium";
-    }
-    return "low";
-  };
-  
-  // Calculate resource efficiency
-  const getResourceEfficiency = () => {
-    // Logic to determine resource efficiency
-    const rainfall = parseInt(formData.rainfall);
-    const irrigation = formData.irrigation === "Yes";
-    
-    if (rainfall > 200 && !irrigation) return "excellent";
-    if ((rainfall > 150 && !irrigation) || (rainfall < 100 && irrigation)) return "good";
-    return "average";
-  };
-  
-  // Calculate market timing
-  const getMarketTiming = () => {
-    // Logic to determine market timing
-    const daysToHarvest = parseInt(formData.days_to_harvest);
-    
-    if (daysToHarvest < 60) return "optimal";
-    if (daysToHarvest < 90) return "good";
-    return "suboptimal";
-  };
-  
-  // Calculate risk level
-  const getRiskLevel = () => {
-    // Logic to determine risk level
-    const weather = formData.weather;
-    const irrigation = formData.irrigation === "Yes";
-    
-    if (weather === "Rainy" && !irrigation) return "high";
-    if (weather === "Sunny" && !irrigation) return "medium";
-    return "low";
-  };
-  
-  // Get optimization tip
-  const getOptimizationTip = () => {
-    // Logic to determine optimization tip
-    const crop = formData.crop;
-    const soil = formData.soil_type;
-    const fertilizer = formData.fertilizer === "Yes";
-    const irrigation = formData.irrigation === "Yes";
-    
-    if (!fertilizer) {
-      return isHindi ? 
-        "फसल के प्रकार के अनुसार उचित उर्वरक का उपयोग करके उपज 20-30% तक बढ़ाएं।" : 
-        "Increase yield by 20-30% using appropriate fertilizers for your crop type.";
-    }
-    
-    if (!irrigation) {
-      return isHindi ? 
-        "सूखा अवधि के दौरान उपज की सुरक्षा के लिए बारिश के पानी का संरक्षण करें या सिंचाई लागू करें।" : 
-        "Conserve rainwater or implement irrigation to protect yield during dry periods.";
-    }
-    
-    if (soil === "Sandy") {
-      return isHindi ? 
-        "रेतीली मिट्टी में जैविक पदार्थ जोड़ें और अधिक बार पानी दें लेकिन कम मात्रा में।" : 
-        "Add organic matter to sandy soil and water more frequently but in smaller amounts.";
-    }
-    
-    return isHindi ? 
-      "फसल की निगरानी नियमित रूप से करें और मौसम के पूर्वानुमान के आधार पर अपनी खेती की गतिविधियों की योजना बनाएं।" : 
-      "Monitor crops regularly and plan your farming activities based on weather forecasts.";
-  };
-  
-  // Handle option selection
-  const handleOptionClick = (option) => {
-    setSelectedOption(option);
-    setIsInsightsLoading(true);
-    
-    setTimeout(() => {
-      setIsInsightsLoading(false);
-    }, 800);
-  };
-  
-  // Reset option selection
-  const resetOptionSelection = () => {
-    setSelectedOption(null);
-  };
-  
-  // Get option response based on selection
-  const getOptionResponse = () => {
-    if (!selectedOption) return '';
-    
-    const optionResponses = {
-      english: {
-        increase: `
-## How to Increase Your ${formData.crop} Yield
-
-### Key Strategies:
-• ${getKeyIncreaseStrategy1()}
-• ${getKeyIncreaseStrategy2()}
-• ${getKeyIncreaseStrategy3()}
-
-### For Your Specific Conditions:
-Based on your ${formData.soil_type} soil and ${formData.weather.toLowerCase()} weather conditions, focus on ${getSpecificIncreaseStrategy()}.
-`,
-        risks: `
-## Main Risks for Your ${formData.crop} Crop
-
-### Current Risk Level: ${getRiskLevel()}
-
-### Top Concerns:
-• ${getMainRisk1()}
-• ${getMainRisk2()}
-• ${getMainRisk3()}
-
-### Mitigation Strategy:
-${getRiskMitigation()}
-`,
-        harvest: `
-## Best Harvest Window for ${formData.crop}
-
-### Optimal Timing:
-Your crop should be ready in about ${formData.days_to_harvest} days from planting.
-The best harvest window is ${getHarvestWindow()}.
-
-### Harvest Indicators:
-Look for ${getHarvestIndicators()}
-
-### Weather Consideration:
-${getHarvestWeatherTip()}
-`,
-        storage: `
-## Storage Considerations for ${formData.crop}
-
-### Recommended Conditions:
-• Temperature: ${getStorageTemp()}
-• Humidity: ${getStorageHumidity()}
-• Ventilation: ${getStorageVentilation()}
-
-### Max Storage Duration:
-With proper conditions: ${getStorageDuration()}
-
-### Key Storage Tip:
-${getStorageTip()}
-`,
-        alternatives: `
-## Alternative Crops for Your Conditions
-
-Based on your soil type (${formData.soil_type}) and climate inputs:
-
-### Recommended Alternatives:
-• ${getAlternativeCrop1()}: ${getAlternativeReason1()}
-• ${getAlternativeCrop2()}: ${getAlternativeReason2()}
-• ${getAlternativeCrop3()}: ${getAlternativeReason3()}
-
-### Comparison with Current Choice:
-${getAlternativeComparison()}
-`,
-        market: `
-## Market Outlook for ${formData.crop}
-
-### Current Trend:
-${getMarketTrend()}
-
-### Price Forecast:
-${getPriceForecast()}
-
-### Demand Drivers:
-• ${getDemandDriver1()}
-• ${getDemandDriver2()}
-
-### Best Selling Window:
-${getBestSellingWindow()}
-`
-      },
-      hindi: {
-        increase: `
-## अपनी ${formData.crop} उपज कैसे बढ़ाएं
-
-### प्रमुख रणनीतियां:
-• ${getKeyIncreaseStrategy1(true)}
-• ${getKeyIncreaseStrategy2(true)}
-• ${getKeyIncreaseStrategy3(true)}
-
-### आपकी विशिष्ट स्थितियों के लिए:
-आपकी ${formData.soil_type} मिट्टी और ${formData.weather.toLowerCase()} मौसम की स्थिति के आधार पर, ${getSpecificIncreaseStrategy(true)} पर ध्यान दें।
-`,
-        risks: `
-## आपकी ${formData.crop} फसल के लिए मुख्य जोखिम
-
-### वर्तमान जोखिम स्तर: ${getRiskLevel(true)}
-
-### प्रमुख चिंताएँ:
-• ${getMainRisk1(true)}
-• ${getMainRisk2(true)}
-• ${getMainRisk3(true)}
-
-### शमन रणनीति:
-${getRiskMitigation(true)}
-`,
-        harvest: `
-## ${formData.crop} के लिए सर्वोत्तम कटाई अवधि
-
-### इष्टतम समय:
-आपकी फसल रोपण से लगभग ${formData.days_to_harvest} दिनों में तैयार हो जानी चाहिए।
-सर्वोत्तम कटाई अवधि ${getHarvestWindow(true)} है।
-
-### कटाई संकेतक:
-${getHarvestIndicators(true)} की तलाश करें
-
-### मौसम विचार:
-${getHarvestWeatherTip(true)}
-`,
-        storage: `
-## ${formData.crop} के लिए भंडारण विचार
-
-### अनुशंसित स्थितियां:
-• तापमान: ${getStorageTemp()}
-• आर्द्रता: ${getStorageHumidity()}
-• वेंटिलेशन: ${getStorageVentilation(true)}
-
-### अधिकतम भंडारण अवधि:
-उचित स्थितियों के साथ: ${getStorageDuration(true)}
-
-### प्रमुख भंडारण टिप:
-${getStorageTip(true)}
-`,
-        alternatives: `
-## आपकी स्थितियों के लिए वैकल्पिक फसलें
-
-आपकी मिट्टी के प्रकार (${formData.soil_type}) और जलवायु इनपुट के आधार पर:
-
-### अनुशंसित विकल्प:
-• ${getAlternativeCrop1(true)}: ${getAlternativeReason1(true)}
-• ${getAlternativeCrop2(true)}: ${getAlternativeReason2(true)}
-• ${getAlternativeCrop3(true)}: ${getAlternativeReason3(true)}
-
-### वर्तमान विकल्प के साथ तुलना:
-${getAlternativeComparison(true)}
-`,
-        market: `
-## ${formData.crop} के लिए बाजार दृष्टिकोण
-
-### वर्तमान प्रवृत्ति:
-${getMarketTrend(true)}
-
-### मूल्य पूर्वानुमान:
-${getPriceForecast(true)}
-
-### मांग ड्राइवर:
-• ${getDemandDriver1(true)}
-• ${getDemandDriver2(true)}
-
-### सर्वोत्तम बिक्री अवधि:
-${getBestSellingWindow(true)}
-`
-      }
-    };
-    
-    return isHindi ? optionResponses.hindi[selectedOption] : optionResponses.english[selectedOption];
-  };
-  
-  // Helper functions for generating option responses
-  const getKeyIncreaseStrategy1 = (hindi = false) => {
-    const strategies = {
-      english: [
-        "Optimize plant spacing based on soil fertility",
-        "Apply precision fertilization at critical growth stages",
-        "Implement proper weed management early in growth cycle"
-      ],
-      hindi: [
-        "मिट्टी की उर्वरता के आधार पर पौधे के स्थान का अनुकूलन करें",
-        "महत्वपूर्ण विकास चरणों में सटीक उर्वरक का प्रयोग करें",
-        "विकास चक्र के शुरुआती समय में उचित खरपतवार प्रबंधन लागू करें"
-      ]
-    };
-    
-    const options = hindi ? strategies.hindi : strategies.english;
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const getKeyIncreaseStrategy2 = (hindi = false) => {
-    const strategies = {
-      english: [
-        "Monitor and maintain optimal soil moisture",
-        "Use disease-resistant varieties suited to your region",
-        "Apply foliar sprays at recommended intervals"
-      ],
-      hindi: [
-        "मिट्टी की इष्टतम नमी की निगरानी और बनाए रखें",
-        "अपने क्षेत्र के अनुकूल रोग-प्रतिरोधी किस्मों का उपयोग करें",
-        "अनुशंसित अंतराल पर पत्ती स्प्रे लागू करें"
-      ]
-    };
-    
-    const options = hindi ? strategies.hindi : strategies.english;
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const getKeyIncreaseStrategy3 = (hindi = false) => {
-    const strategies = {
-      english: [
-        "Practice crop rotation to break pest cycles",
-        "Time planting according to seasonal conditions",
-        "Use integrated pest management techniques"
-      ],
-      hindi: [
-        "कीट चक्र तोड़ने के लिए फसल चक्र का अभ्यास करें",
-        "मौसमी स्थितियों के अनुसार रोपण का समय निर्धारित करें",
-        "एकीकृत कीट प्रबंधन तकनीकों का उपयोग करें"
-      ]
-    };
-    
-    const options = hindi ? strategies.hindi : strategies.english;
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const getSpecificIncreaseStrategy = (hindi = false) => {
-    if (formData.soil_type === "Sandy") {
-      return hindi ? 
-        "अधिक जैविक पदार्थ जोड़ना और पानी प्रतिधारण में सुधार" : 
-        "adding more organic matter and improving water retention";
-    }
-    
-    if (formData.soil_type === "Clay") {
-      return hindi ? 
-        "जल निकासी में सुधार और मिट्टी की संरचना" : 
-        "improving drainage and soil structure";
-    }
-    
-    if (formData.weather === "Rainy") {
-      return hindi ? 
-        "अच्छी जल निकासी सुनिश्चित करना और फंगल रोगों को नियंत्रित करना" : 
-        "ensuring good drainage and controlling fungal diseases";
-    }
-    
-    if (formData.weather === "Sunny" && formData.irrigation === "No") {
-      return hindi ? 
-        "जल संरक्षण तकनीकों और मल्चिंग" : 
-        "water conservation techniques and mulching";
-    }
-    
-    return hindi ? 
-      "समग्र मिट्टी की स्वास्थ्य और पोषक तत्व प्रबंधन" : 
-      "overall soil health and nutrient management";
-  };
-  
-  const getMainRisk1 = (hindi = false) => {
-    const map = {
-      "Rainy": hindi ? "अत्यधिक नमी से फंगल रोग" : "Fungal diseases due to excess moisture",
-      "Sunny": hindi ? "सूखा तनाव और पानी की कमी" : "Drought stress and water scarcity",
-      "Cloudy": hindi ? "अपर्याप्त प्रकाश संश्लेषण" : "Insufficient photosynthesis"
-    };
-    
-    return map[formData.weather] || (hindi ? "मौसमी बदलाव" : "Weather variability");
-  };
-  
-  const getMainRisk2 = (hindi = false) => {
-    const map = {
-      "Sandy": hindi ? "जल और पोषक तत्व का तेजी से निक्षालन" : "Rapid leaching of water and nutrients",
-      "Clay": hindi ? "जल जमाव और जड़ रोग" : "Waterlogging and root diseases",
-      "Loam": hindi ? "खरपतवार प्रतिस्पर्धा" : "Weed competition",
-      "Silt": hindi ? "मिट्टी क्रस्टिंग और कम अंकुरण" : "Soil crusting and poor germination"
-    };
-    
-    return map[formData.soil_type] || (hindi ? "मिट्टी की अनुकूलता" : "Soil compatibility");
-  };
-  
-  const getMainRisk3 = (hindi = false) => {
-    if (formData.fertilizer === "No") {
-      return hindi ? "पोषक तत्वों की कमी और धीमा विकास" : "Nutrient deficiency and slow growth";
-    }
-    
-    if (formData.irrigation === "No") {
-      return hindi ? "सूखे की स्थिति में अनियमित वृद्धि" : "Irregular growth in dry conditions";
-    }
-    
-    const options = hindi ? 
-      ["कीट आक्रमण", "मूल्य अस्थिरता", "रोग प्रकोप"] : 
-      ["Pest infestation", "Price volatility", "Disease outbreaks"];
-    
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const getRiskMitigation = (hindi = false) => {
-    if (formData.weather === "Rainy" && formData.soil_type === "Clay") {
-      return hindi ? 
-        "उठी हुई क्यारियों का निर्माण करें और अच्छी जल निकासी सुनिश्चित करें। नियमित रूप से फंगल रोगों की निगरानी करें और निवारक स्प्रे लागू करें।" : 
-        "Create raised beds and ensure good drainage. Monitor for fungal diseases regularly and apply preventive sprays.";
-    }
-    
-    if (formData.weather === "Sunny" && formData.irrigation === "No") {
-      return hindi ? 
-        "मिट्टी में नमी बनाए रखने के लिए मल्च का उपयोग करें। सूखा प्रतिरोधी किस्मों पर विचार करें और जल संरक्षण तकनीकों को लागू करें।" : 
-        "Use mulch to retain soil moisture. Consider drought-resistant varieties and implement water conservation techniques.";
-    }
-    
-    if (formData.fertilizer === "No") {
-      return hindi ? 
-        "फसल की विशिष्ट आवश्यकताओं के अनुसार संतुलित उर्वरक लागू करें। मिट्टी परीक्षण कराएं और पोषक तत्वों की कमी की निगरानी करें।" : 
-        "Apply balanced fertilizers according to crop-specific requirements. Conduct soil tests and monitor for nutrient deficiencies.";
-    }
-    
-    return hindi ? 
-      "एकीकृत कीट प्रबंधन का अभ्यास करें। मौसम की निगरानी करें और उसके अनुसार खेती की गतिविधियों की योजना बनाएं। विविधीकरण द्वारा जोखिम को कम करें।" : 
-      "Practice integrated pest management. Monitor weather and plan farming activities accordingly. Reduce risk through diversification.";
-  };
-  
-  const getHarvestWindow = (hindi = false) => {
-    const daysToHarvest = parseInt(formData.days_to_harvest);
-    
-    if (daysToHarvest < 70) {
-      return hindi ? "रोपण के 60-70 दिन बाद" : "60-70 days after planting";
-    } else if (daysToHarvest < 100) {
-      return hindi ? "रोपण के 90-100 दिन बाद" : "90-100 days after planting";
-    } else {
-      return hindi ? "रोपण के 120-130 दिन बाद" : "120-130 days after planting";
-    }
-  };
-  
-  const getHarvestIndicators = (hindi = false) => {
-    const cropMap = {
-      "Rice": hindi ? "पीले-सुनहरे रंग के दाने, 80-85% परिपक्वता" : "yellow-golden grains, 80-85% maturity",
-      "Wheat": hindi ? "पीले-भूरे तने, कठोर दाने" : "yellow-brown stems, hard grains",
-      "Maize": hindi ? "सूखे रेशम, पूरी तरह से भरे हुए कान" : "dry silk, fully filled ears",
-      "Cotton": hindi ? "खुले बोल्स, सफेद फाइबर" : "open bolls, white fiber",
-      "Barley": hindi ? "पीली-पीली बालियां, सूखे दाने" : "yellow-golden spikes, dry grains",
-      "Soybean": hindi ? "भूरे-पीले फली, अधिकतर पत्तियां गिर गई हों" : "brown-yellow pods, most leaves fallen"
-    };
-    
-    return cropMap[formData.crop] || (hindi ? "परिपक्व रंग और उचित आकार" : "mature color and proper size");
-  };
-  
-  const getHarvestWeatherTip = (hindi = false) => {
-    if (formData.weather === "Rainy") {
-      return hindi ? 
-        "बारिश के बाद कटाई से बचें क्योंकि यह नमी को बढ़ा सकता है और भंडारण के दौरान गुणवत्ता को प्रभावित कर सकता है। शुष्क दिनों की प्रतीक्षा करें।" : 
-        "Avoid harvesting after rain as it can increase moisture and affect quality during storage. Wait for dry days.";
-    }
-    
-    if (formData.weather === "Sunny") {
-      return hindi ? 
-                "अत्यधिक गर्मी से बचने के लिए सुबह या शाम के समय कटाई करें। यदि संभव हो तो फसल के खराब होने से बचने के लिए शीघ्र संसाधित करें।" : 
-        "Harvest during morning or evening to avoid excessive heat. Process promptly if possible to prevent crop degradation.";
-    }
-    
-    return hindi ? 
-      "सुनिश्चित करें कि फसल सूखी है और अधिमानतः सुबह के समय कटाई करें जब तापमान मध्यम होता है।" : 
-      "Ensure the crop is dry and preferably harvest during morning hours when temperatures are moderate.";
-  };
-  
-  const getStorageTemp = () => {
-    const cropMap = {
-      "Rice": "12-15°C",
-      "Wheat": "10-15°C",
-      "Maize": "10-15°C",
-      "Cotton": "15-20°C",
-      "Barley": "10-15°C",
-      "Soybean": "8-12°C"
-    };
-    
-    return cropMap[formData.crop] || "10-15°C";
-  };
-  
-  const getStorageHumidity = () => {
-    const cropMap = {
-      "Rice": "60-70%",
-      "Wheat": "55-65%",
-      "Maize": "60-70%",
-      "Cotton": "40-60%",
-      "Barley": "55-65%",
-      "Soybean": "65-70%"
-    };
-    
-    return cropMap[formData.crop] || "60-70%";
-  };
-  
-  const getStorageVentilation = (hindi = false) => {
-    if (hindi) {
-      return "अच्छा";
-    }
-    return "Good";
-  };
-  
-  const getStorageDuration = (hindi = false) => {
-    const cropMap = {
-      "Rice": hindi ? "6-12 महीने" : "6-12 months",
-      "Wheat": hindi ? "8-12 महीने" : "8-12 months",
-      "Maize": hindi ? "6-8 महीने" : "6-8 months",
-      "Cotton": hindi ? "8-10 महीने" : "8-10 months",
-      "Barley": hindi ? "8-10 महीने" : "8-10 months",
-      "Soybean": hindi ? "6-8 महीने" : "6-8 months"
-    };
-    
-    return cropMap[formData.crop] || (hindi ? "6-8 महीने" : "6-8 months");
-  };
-  
-  const getStorageTip = (hindi = false) => {
-    if (hindi) {
-      return "सूखी, हवादार जगह पर रखें और नियमित रूप से जांच करें।";
-    }
-    return "Keep in dry, ventilated place and check regularly.";
-  };
-  
-  const getAlternativeCrop1 = (hindi = false) => {
-    // Suggest alternative crops based on current crop and soil type
-    const alternatives = {
-      "Rice": hindi ? "मक्का (Maize)" : "Maize",
-      "Wheat": hindi ? "जौ (Barley)" : "Barley",
-      "Maize": hindi ? "सूरजमुखी (Sunflower)" : "Sunflower",
-      "Cotton": hindi ? "सोयाबीन (Soybean)" : "Soybean",
-      "Barley": hindi ? "गेहूं (Wheat)" : "Wheat",
-      "Soybean": hindi ? "मूंग (Mung Bean)" : "Mung Bean"
-    };
-    
-    return alternatives[formData.crop] || (hindi ? "गेहूं (Wheat)" : "Wheat");
-  };
-  
-  const getAlternativeCrop2 = (hindi = false) => {
-    const alternatives = {
-      "Rice": hindi ? "उड़द (Black Gram)" : "Black Gram",
-      "Wheat": hindi ? "सरसों (Mustard)" : "Mustard",
-      "Maize": hindi ? "बाजरा (Millet)" : "Millet",
-      "Cotton": hindi ? "मूंगफली (Groundnut)" : "Groundnut",
-      "Barley": hindi ? "चना (Chickpea)" : "Chickpea",
-      "Soybean": hindi ? "मसूर (Lentil)" : "Lentil"
-    };
-    
-    return alternatives[formData.crop] || (hindi ? "चना (Chickpea)" : "Chickpea");
-  };
-  
-  const getAlternativeCrop3 = (hindi = false) => {
-    const alternatives = {
-      "Rice": hindi ? "मूंग (Mung Bean)" : "Mung Bean",
-      "Wheat": hindi ? "मक्का (Maize)" : "Maize",
-      "Maize": hindi ? "सोयाबीन (Soybean)" : "Soybean",
-      "Cotton": hindi ? "ज्वार (Sorghum)" : "Sorghum",
-      "Barley": hindi ? "जई (Oats)" : "Oats",
-      "Soybean": hindi ? "सूरजमुखी (Sunflower)" : "Sunflower"
-    };
-    
-    return alternatives[formData.crop] || (hindi ? "सरसों (Mustard)" : "Mustard");
-  };
-  
-  const getAlternativeReason1 = (hindi = false) => {
-    if (formData.soil_type === "Sandy") {
-      return hindi ? "सूखा प्रतिरोधी, कम पानी की आवश्यकता" : "Drought resistant, requires less water";
-    }
-    
-    if (formData.soil_type === "Clay") {
-      return hindi ? "मिट्टी संरचना में सुधार करता है" : "Improves soil structure";
-    }
-    
-    return hindi ? "समान मौसम आवश्यकताएँ, अच्छी फसल चक्र विकल्प" : "Similar weather requirements, good rotation option";
-  };
-  
-  const getAlternativeReason2 = (hindi = false) => {
-    if (formData.weather === "Rainy") {
-      return hindi ? "अधिक नमी वाली स्थितियों में अच्छा प्रदर्शन" : "Performs well in higher moisture conditions";
-    }
-    
-    if (formData.weather === "Sunny") {
-      return hindi ? "सूखा सहनशील, कम पानी की आवश्यकता" : "Drought tolerant, needs less water";
-    }
-    
-    return hindi ? "कम इनपुट, अच्छा मार्केट मूल्य" : "Lower inputs, good market value";
-  };
-  
-  const getAlternativeReason3 = (hindi = false) => {
-    if (formData.fertilizer === "No") {
-      return hindi ? "कम उर्वरक की आवश्यकता है" : "Requires less fertilizer";
-    }
-    
-    if (formData.irrigation === "No") {
-      return hindi ? "वर्षा जल पर अच्छी तरह से बढ़ता है" : "Grows well on rainfall";
-    }
-    
-    return hindi ? "विविधीकरण के लिए अच्छा, कम जोखिम" : "Good for diversification, lower risk";
-  };
-  
-  const getAlternativeComparison = (hindi = false) => {
-    if (hindi) {
-      return `${formData.crop} की तुलना में, ये विकल्प या तो कम पानी की आवश्यकता, कम इनपुट लागत, या अधिक मौसम अनुकूलता प्रदान करते हैं। आपकी स्थिति के आधार पर जोखिम को कम करने के लिए 2-3 फसलों के मिश्रण पर विचार करें।`;
-    }
-    
-    return `Compared to ${formData.crop}, these alternatives offer either lower water requirements, reduced input costs, or better weather adaptability. Consider a mix of 2-3 crops to reduce risk based on your situation.`;
-  };
-  
-  const getMarketTrend = (hindi = false) => {
-    const trends = {
-      english: [
-        `${formData.crop} prices have been steadily rising over the past season due to increased demand.`,
-        `${formData.crop} market has shown stability with slight upward movement.`,
-        `${formData.crop} has experienced price fluctuations but maintains overall positive trend.`
-      ],
-      hindi: [
-        `बढ़ती मांग के कारण पिछले सीजन से ${formData.crop} के दाम लगातार बढ़ रहे हैं।`,
-        `${formData.crop} बाजार ने थोड़ी ऊपर की ओर गति के साथ स्थिरता दिखाई है।`,
-        `${formData.crop} में मूल्य उतार-चढ़ाव का अनुभव हुआ है लेकिन समग्र सकारात्मक प्रवृत्ति बनाए रखता है।`
-      ]
-    };
-    
-    const options = hindi ? trends.hindi : trends.english;
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const getPriceForecast = (hindi = false) => {
-    if (formData.fertilizer === "Yes" && formData.irrigation === "Yes") {
-      return hindi ? 
-        "आने वाले मौसम में 10-15% की वृद्धि की संभावना है, विशेष रूप से उच्च गुणवत्ता वाले उत्पादन के लिए" : 
-        "Likely to increase 10-15% in the coming season, especially for high-quality produce";
-    }
-    
-    return hindi ? 
-      "अगले 3-6 महीनों में स्थिर रहने की उम्मीद, मौसमी उतार-चढ़ाव के साथ" : 
-      "Expected to remain stable over next 3-6 months, with seasonal fluctuations";
-  };
-  
-  const getDemandDriver1 = (hindi = false) => {
-    const drivers = {
-      english: [
-        "Increasing consumer preference for sustainable farming products",
-        "Growing export market opportunities",
-        "Rising demand in food processing industries"
-      ],
-      hindi: [
-        "टिकाऊ खेती उत्पादों के लिए बढ़ती उपभोक्ता प्राथमिकता",
-        "बढ़ते निर्यात बाजार के अवसर",
-        "खाद्य प्रसंस्करण उद्योगों में बढ़ती मांग"
-      ]
-    };
-    
-    const options = hindi ? drivers.hindi : drivers.english;
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const getDemandDriver2 = (hindi = false) => {
-    const drivers = {
-      english: [
-        "Government policies supporting domestic agriculture",
-        "Increasing population and food security needs",
-        "Climate-induced shortages in competing regions"
-      ],
-      hindi: [
-        "घरेलू कृषि का समर्थन करने वाली सरकारी नीतियां",
-        "बढ़ती आबादी और खाद्य सुरक्षा जरूरतें",
-        "प्रतिस्पर्धी क्षेत्रों में जलवायु प्रेरित कमी"
-      ]
-    };
-    
-    const options = hindi ? drivers.hindi : drivers.english;
-    return options[Math.floor(Math.random() * options.length)];
-  };
-  
-  const getBestSellingWindow = (hindi = false) => {
-    // Logic to determine best selling window
-    const daysToHarvest = parseInt(formData.days_to_harvest);
-    let harvestMonth;
-    
-    // Assuming planting in May
-    if (daysToHarvest < 80) {
-      harvestMonth = hindi ? "जुलाई-अगस्त" : "July-August";
-    } else if (daysToHarvest < 120) {
-      harvestMonth = hindi ? "अगस्त-सितंबर" : "August-September";
-    } else {
-      harvestMonth = hindi ? "अक्टूबर-नवंबर" : "October-November";
-    }
-    
-    if (hindi) {
-      return `फसल के तुरंत बाद बिक्री न करें। ${harvestMonth} में कटाई के 3-4 सप्ताह बाद बिक्री करने पर विचार करें जब आपूर्ति कम हो और कीमतें अधिक हों।`;
-    }
-    
-    return `Don't sell immediately after harvest. Consider selling 3-4 weeks after your ${harvestMonth} harvest when supply is lower and prices are higher.`;
-  };
-
-  // Handle form input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
     setValidationError(null) // Clear validation errors when user makes changes
@@ -1028,8 +236,6 @@ ${getBestSellingWindow(true)}
     setLoading(true)
     setError(null)
     setPrediction(null) // Reset prediction before new request
-    setInsights({})
-    setSelectedOption(null)
     
     try {
       console.log("Submitting form data:", formData);
@@ -1092,8 +298,6 @@ ${getBestSellingWindow(true)}
     setPrediction(null)
     setError(null)
     setStep(1)
-    setInsights({})
-    setSelectedOption(null)
   }
 
   // Helper to get crop name in current language
@@ -1108,37 +312,6 @@ ${getBestSellingWindow(true)}
     };
     
     return cropTranslations[cropName] || cropName;
-  };
-  
-  // Get visual rating for insights
-  const getRatingVisual = (value) => {
-    if (!value) return '—';
-    
-    // Map text values to numeric for visualization
-    const ratingMap = {
-      'excellent': 5, 'good': 4, 'average': 3, 'fair': 2, 'poor': 1,
-      'उत्कृष्ट': 5, 'अच्छा': 4, 'औसत': 3, 'उचित': 2, 'कमज़ोर': 1,
-      'high': 3, 'medium': 2, 'low': 1,
-      'उच्च': 3, 'मध्यम': 2, 'निम्न': 1,
-      'optimal': 3, 'good': 2, 'suboptimal': 1,
-      'इष्टतम': 3, 'अच्छा': 2, 'उप-इष्टतम': 1
-    };
-    
-    const rating = ratingMap[value.toLowerCase()] || 3;
-    const maxRating = value.toLowerCase() === 'excellent' || value.toLowerCase() === 'उत्कृष्ट' || 
-                      value.toLowerCase() === 'good' || value.toLowerCase() === 'अच्छा' || 
-                      value.toLowerCase() === 'average' || value.toLowerCase() === 'औसत' || 
-                      value.toLowerCase() === 'fair' || value.toLowerCase() === 'उचित' || 
-                      value.toLowerCase() === 'poor' || value.toLowerCase() === 'कमज़ोर' ? 5 : 3;
-    
-    return (
-      <div className="rating-visual">
-        {[...Array(maxRating)].map((_, i) => (
-          <span key={i} className={`rating-dot ${i < rating ? 'active' : ''}`}></span>
-        ))}
-        <span className="rating-text">{value}</span>
-      </div>
-    );
   };
 
   return (
@@ -1172,6 +345,11 @@ ${getBestSellingWindow(true)}
             {validationError}
           </div>
         )}
+
+        {/* Debug info - remove in production */}
+        <div className="debug-info" style={{display: 'none'}}>
+          Current Step: {step} | Has Prediction: {prediction ? 'Yes' : 'No'} | Has Error: {error ? 'Yes' : 'No'}
+        </div>
 
         <form onSubmit={handleSubmit} className="form">
           {step === 1 && (
@@ -1458,135 +636,9 @@ ${getBestSellingWindow(true)}
                       <span className="detail-value">{formData.irrigation === "Yes" ? t.yes : t.no}</span>
                     </div>
                   </div>
-                  
-                  {/* Insights Section */}
-                  <div className="insights-section" ref={insightsRef}>
-                    <h3 className="insights-title">{t.insightsTitle}</h3>
-                    
-                    {isInsightsLoading && (
-                      <div className="insights-loading">
-                        <div className="insights-spinner"></div>
-                        <p>{t.loadingInsights}</p>
-                      </div>
-                    )}
-                    
-                    {/* Main Insights */}
-                    {!isInsightsLoading && Object.keys(insights).length > 0 && !selectedOption && (
-                      <div className="main-insights">
-                        <div className="insights-grid">
-                          <div className="insight-card">
-                            <h4>{t.yieldQuality}</h4>
-                            {getRatingVisual(insights.yieldQuality)}
-                          </div>
-                          <div className="insight-card">
-                            <h4>{t.profitPotential}</h4>
-                            {getRatingVisual(insights.profitPotential)}
-                          </div>
-                          <div className="insight-card">
-                            <h4>{t.resourceEfficiency}</h4>
-                            {getRatingVisual(insights.resourceEfficiency)}
-                          </div>
-                          <div className="insight-card">
-                            <h4>{t.marketTiming}</h4>
-                            {getRatingVisual(insights.marketTiming)}
-                          </div>
-                          <div className="insight-card">
-                            <h4>{t.riskFactors}</h4>
-                            {getRatingVisual(insights.riskFactors)}
-                          </div>
-                        </div>
-                        
-                        {insights.optimizationTip && (
-                          <div className="optimization-tip">
-                            <h4>{t.optimizationTip}</h4>
-                            <p>{insights.optimizationTip}</p>
-                          </div>
-                        )}
-                        
-                        {/* Options for More Information */}
-                        <div className="options-section">
-                          <h4>{t.askMeAbout}</h4>
-                          <div className="options-grid">
-                            <button 
-                              className="option-button" 
-                              onClick={() => handleOptionClick('increase')}
-                            >
-                              {t.optionIncrease}
-                            </button>
-                            <button 
-                              className="option-button" 
-                              onClick={() => handleOptionClick('risks')}
-                            >
-                              {t.optionRisks}
-                            </button>
-                            <button 
-                              className="option-button" 
-                              onClick={() => handleOptionClick('harvest')}
-                            >
-                              {t.optionHarvest}
-                            </button>
-                            <button 
-                              className="option-button" 
-                              onClick={() => handleOptionClick('storage')}
-                            >
-                              {t.optionStorage}
-                            </button>
-                            <button 
-                              className="option-button" 
-                              onClick={() => handleOptionClick('alternatives')}
-                            >
-                              {t.optionAlternatives}
-                            </button>
-                            <button 
-                              className="option-button" 
-                              onClick={() => handleOptionClick('market')}
-                            >
-                              {t.optionMarket}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Selected Option Content */}
-                    {!isInsightsLoading && selectedOption && (
-                      <div className="selected-option-content">
-                        <button 
-                          className="back-button" 
-                          onClick={resetOptionSelection}
-                        >
-                          ← {t.backToOptions}
-                        </button>
-                        
-                        <div className="option-response">
-                          {getOptionResponse().split('\n').map((line, i) => {
-                            if (line.startsWith('## ')) {
-                              return <h3 key={i}>{line.replace('## ', '')}</h3>;
-                            } else if (line.startsWith('### ')) {
-                              return <h4 key={i}>{line.replace('### ', '')}</h4>;
-                            } else if (line.startsWith('• ')) {
-                              return <li key={i}>{line.replace('• ', '')}</li>;
-                            } else if (line.trim() === '') {
-                              return <br key={i} />;
-                            } else {
-                              return <p key={i}>{line}</p>;
-                            }
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
                   <p className="result-tip">
                     {t.resultTip.replace('{crop}', getLocalizedCropName(formData.crop))}
                   </p>
-                  
-                  <button 
-                    className="restart-button"
-                    onClick={restartForm}
-                  >
-                    {t.startNew}
-                  </button>
                 </div>
               )}
               
@@ -1600,21 +652,17 @@ ${getBestSellingWindow(true)}
                   <p className="result-tip">
                     {t.errorTip}
                   </p>
-                  <button 
-                    className="restart-button error-restart"
-                    onClick={restartForm}
-                  >
-                    {t.tryAgain}
-                  </button>
                 </div>
               )}
               
-              {!prediction && !error && step === 4 && (
-                <div className="result-loading">
-                  <div className="loading-spinner"></div>
-                  <p>{t.processing}</p>
-                </div>
-              )}
+              <div className="form-nav">
+                <button type="button" className="btn-prev" onClick={prevStep}>
+                  <span className="arrow">←</span> {t.back}
+                </button>
+                <button type="button" className="btn-restart" onClick={restartForm}>
+                  {t.startNew}
+                </button>
+              </div>
             </div>
           )}
         </form>
@@ -1645,7 +693,7 @@ ${getBestSellingWindow(true)}
         .yield-form-container {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 1.5rem;
+          gap: 2rem;
           max-width: 1200px;
           margin: 0 auto;
         }
@@ -1660,19 +708,18 @@ ${getBestSellingWindow(true)}
           background-color: white;
           border-radius: 12px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          padding: 1.5rem;
+          padding: 2rem;
           position: relative;
           overflow: hidden;
         }
-        
-        .form-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 6px;
-          background: linear-gradient(to right, #2f855a, #48bb78);
+
+        .debug-info {
+          background-color: #f8f9fa;
+          padding: 10px;
+          margin-bottom: 15px;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 12px;
         }
 
         .validation-alert {
@@ -1686,20 +733,19 @@ ${getBestSellingWindow(true)}
           align-items: center;
           gap: 0.5rem;
           animation: shake 0.5s ease-in-out;
-          font-size: 0.85rem;
         }
 
         .alert-icon {
           background-color: #fbbf24;
           color: white;
-          width: 18px;
-          height: 18px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 14px;
         }
 
         @keyframes shake {
@@ -1713,7 +759,7 @@ ${getBestSellingWindow(true)}
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 1.5rem;
+          margin-bottom: 2rem;
         }
         
         .progress-step {
@@ -1723,8 +769,8 @@ ${getBestSellingWindow(true)}
         }
         
         .step-number {
-          width: 30px;
-          height: 30px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           background-color: #e2e8f0;
           color: #a0aec0;
@@ -1732,9 +778,8 @@ ${getBestSellingWindow(true)}
           align-items: center;
           justify-content: center;
           font-weight: 600;
-          margin-bottom: 0.4rem;
+          margin-bottom: 0.5rem;
           transition: all 0.3s ease;
-          font-size: 0.85rem;
         }
         
         .progress-step.active .step-number {
@@ -1743,7 +788,7 @@ ${getBestSellingWindow(true)}
         }
         
         .step-label {
-          font-size: 0.75rem;
+          font-size: 0.875rem;
           color: #718096;
           transition: all 0.3s ease;
         }
@@ -1757,26 +802,25 @@ ${getBestSellingWindow(true)}
           flex-grow: 1;
           height: 2px;
           background-color: #e2e8f0;
-          margin: 0 0.4rem;
+          margin: 0 0.5rem;
         }
         
         .form-title {
-          font-size: 1.25rem;
+          font-size: 1.75rem;
           color: #2f855a;
-          margin-bottom: 0.4rem;
+          margin-bottom: 0.5rem;
         }
         
         .form-description {
           color: #4a5568;
-          margin-bottom: 1.25rem;
-          font-size: 0.85rem;
+          margin-bottom: 1.5rem;
         }
         
         .form-fields {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 1.25rem;
-          margin-bottom: 1.5rem;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
         }
 
         .result-step {
@@ -1785,7 +829,7 @@ ${getBestSellingWindow(true)}
         
         @media (min-width: 640px) {
           .form-fields {
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           }
         }
         
@@ -1795,10 +839,9 @@ ${getBestSellingWindow(true)}
         
         label {
           display: block;
-          margin-bottom: 0.4rem;
+          margin-bottom: 0.5rem;
           font-weight: 500;
           color: #2d3748;
-          font-size: 0.85rem;
         }
 
         .required {
@@ -1808,10 +851,10 @@ ${getBestSellingWindow(true)}
         
         input, select {
           width: 100%;
-          padding: 0.6rem;
+          padding: 0.75rem;
           border: 1px solid #e2e8f0;
-          border-radius: 6px;
-          font-size: 0.9rem;
+          border-radius: 8px;
+          font-size: 1rem;
           transition: all 0.3s ease;
           background-color: #f7fafc;
         }
@@ -1835,17 +878,16 @@ ${getBestSellingWindow(true)}
         
         .radio-option input {
           width: auto;
-          margin-right: 0.4rem;
+          margin-right: 0.5rem;
         }
         
         .radio-option label {
           margin: 0;
-          font-size: 0.85rem;
         }
         
         .input-help {
           display: block;
-          font-size: 0.7rem;
+          font-size: 0.75rem;
           color: #718096;
           margin-top: 0.25rem;
         }
@@ -1857,15 +899,14 @@ ${getBestSellingWindow(true)}
         }
         
         .btn-prev, .btn-next, .btn-submit, .btn-restart {
-          padding: 0.6rem 1.2rem;
-          border-radius: 6px;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
           font-weight: 600;
-          font-size: 0.85rem;
           cursor: pointer;
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: 0.5rem;
         }
         
         .btn-prev {
@@ -1906,25 +947,25 @@ ${getBestSellingWindow(true)}
         }
 
         .btn-restart {
-          background-color: #2f855a;
+          background-color: #4299e1;
           color: white;
           border: none;
         }
 
         .btn-restart:hover {
-          background-color: #276749;
+          background-color: #3182ce;
           transform: translateY(-2px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         
         .arrow {
-          font-size: 1rem;
+          font-size: 1.25rem;
         }
         
         .result {
           margin-top: 1rem;
           margin-bottom: 1rem;
-          padding: 1.25rem;
+          padding: 1.5rem;
           border-radius: 8px;
           animation: fadeIn 0.5s ease;
         }
@@ -1947,20 +988,19 @@ ${getBestSellingWindow(true)}
         }
         
         .result-header h3 {
-          font-size: 1.1rem;
+          font-size: 1.25rem;
           color: #2d3748;
           margin: 0;
         }
         
         .result-icon {
-          width: 24px;
-          height: 24px;
+          width: 30px;
+          height: 30px;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 50%;
           font-weight: bold;
-          font-size: 0.85rem;
         }
         
         .success .result-icon {
@@ -1976,49 +1016,47 @@ ${getBestSellingWindow(true)}
         .result-message {
           margin-bottom: 0.75rem;
           font-weight: 500;
-          font-size: 0.85rem;
         }
         
         .prediction-result {
           display: flex;
           flex-direction: column;
           align-items: center;
-          margin: 1.25rem 0;
+          margin: 1.5rem 0;
         }
         
         .prediction-value {
-          font-size: 2.25rem;
+          font-size: 3rem;
           font-weight: 700;
           color: #2f855a;
         }
         
         .prediction-unit {
-          font-size: 1rem;
+          font-size: 1.25rem;
           color: #718096;
         }
         
         .prediction-details {
           display: flex;
           justify-content: space-around;
-          margin: 1.25rem 0;
-          background-color: #f0fff4;
-          padding: 0.8rem;
-          border-radius: 6px;
+          margin: 1.5rem 0;
+          background-color: #e6fffa;
+          padding: 1rem;
+          border-radius: 8px;
         }
 
         .prediction-more-details {
           background-color: #f0fff4;
-          border-radius: 6px;
-          padding: 0.8rem;
-          margin: 0.5rem 0 1.25rem;
+          border-radius: 8px;
+          padding: 1rem;
+          margin: 1.5rem 0;
         }
 
         .detail-row {
           display: flex;
           justify-content: space-between;
-          padding: 0.4rem 0;
+          padding: 0.5rem 0;
           border-bottom: 1px dashed #c6f6d5;
-          font-size: 0.85rem;
         }
 
         .detail-row:last-child {
@@ -2035,7 +1073,7 @@ ${getBestSellingWindow(true)}
         }
         
         .detail-label {
-          font-size: 0.75rem;
+          font-size: 0.875rem;
           color: #718096;
           margin-bottom: 0.25rem;
         }
@@ -2043,11 +1081,10 @@ ${getBestSellingWindow(true)}
         .detail-value {
           font-weight: 600;
           color: #2d3748;
-          font-size: 0.85rem;
         }
         
         .result-tip {
-          font-size: 0.8rem;
+          font-size: 0.875rem;
           color: #718096;
         }
         
@@ -2055,13 +1092,13 @@ ${getBestSellingWindow(true)}
           background-color: white;
           border-radius: 12px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          padding: 1.5rem;
+          padding: 2rem;
         }
         
         .info-card h3 {
           color: #2f855a;
-          margin-bottom: 1.25rem;
-          font-size: 1.1rem;
+          margin-bottom: 1.5rem;
+          font-size: 1.25rem;
         }
         
         .info-item {
@@ -2070,352 +1107,33 @@ ${getBestSellingWindow(true)}
         
         .info-item h4 {
           color: #4a5568;
-          margin-bottom: 0.4rem;
-          font-size: 0.9rem;
+          margin-bottom: 0.5rem;
+          font-size: 1rem;
         }
         
         .info-item p {
           color: #718096;
-          font-size: 0.85rem;
+          font-size: 0.95rem;
           line-height: 1.5;
         }
         
-        .result-loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 1.5rem;
-        }
-        
-        .loading-spinner {
-          width: 36px;
-          height: 36px;
-          border: 3px solid rgba(47, 133, 90, 0.1);
-          border-top-color: #2f855a;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1rem;
-        }
-        
-        /* Insights section styles - more compact and professional */
-        .insights-section {
-          margin-top: 1.25rem;
-          background-color: #f8f9fa;
-          border-radius: 6px;
-          padding: 1rem;
-          border-left: 3px solid #2f855a;
-        }
-        
-        .insights-title {
-          color: #2f855a;
-          font-size: 1rem;
-          margin-top: 0;
-          margin-bottom: 1rem;
-          display: flex;
-          align-items: center;
-        }
-        
-        .insights-title::before {
-          content: '🔍';
-          margin-right: 6px;
-          font-size: 0.9rem;
-        }
-        
-        .insights-loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 0.75rem;
-          gap: 0.6rem;
-        }
-        
-        .insights-spinner {
-          width: 24px;
-          height: 24px;
-          border: 2px solid rgba(47, 133, 90, 0.1);
-          border-top-color: #2f855a;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        
-        .insights-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-        
-        .insight-card {
-          background-color: white;
-          border-radius: 6px;
-          padding: 0.5rem 0.6rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        }
-        
-        .insight-card h4 {
-          font-size: 0.7rem;
-          color: #4a5568;
-          margin-top: 0;
-          margin-bottom: 0.4rem;
-        }
-        
-        .rating-visual {
-          display: flex;
-          align-items: center;
-        }
-        
-        .rating-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background-color: #e2e8f0;
-          margin-right: 2px;
-        }
-        
-        .rating-dot.active {
-          background-color: #2f855a;
-        }
-        
-        .rating-text {
-          margin-left: 4px;
-          font-size: 0.7rem;
-          font-weight: 600;
-          color: #2d3748;
-        }
-        
-        .optimization-tip {
-          background-color: white;
-          border-radius: 6px;
-          padding: 0.6rem;
-          margin-bottom: 1rem;
-          border-left: 2px solid #2f855a;
-        }
-        
-        .optimization-tip h4 {
-          color: #2f855a;
-          margin-top: 0;
-          margin-bottom: 0.3rem;
-          font-size: 0.8rem;
-        }
-        
-        .optimization-tip p {
-          margin: 0;
-          color: #4a5568;
-          font-size: 0.75rem;
-        }
-        
-        .options-section {
-          margin-top: 1rem;
-        }
-        
-        .options-section h4 {
-          color: #4a5568;
-          font-size: 0.8rem;
-          margin-bottom: 0.4rem;
-        }
-        
-        .options-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-          gap: 0.4rem;
-        }
-        
-        .option-button {
-          background-color: #f8f9fa;
-          border: 1px solid #e2e8f0;
-          border-radius: 4px;
-          padding: 0.4rem;
-          text-align: center;
-          color: #4a5568;
-          font-size: 0.7rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          white-space: normal;
-        }
-        
-        .option-button:hover {
-          background-color: #edf2f7;
-          border-color: #2f855a;
-        }
-        
-        .selected-option-content {
-          animation: fadeIn 0.3s ease;
-        }
-        
-        .back-button {
-          background: none;
-          border: none;
-          color: #2f855a;
-          font-size: 0.75rem;
-          cursor: pointer;
-          padding: 0;
-          margin-bottom: 0.6rem;
-          display: inline-flex;
-          align-items: center;
-        }
-        
-        .back-button:hover {
-          text-decoration: underline;
-        }
-        
-        .option-response {
-          background-color: white;
-          border-radius: 6px;
-          padding: 0.75rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-          font-size: 0.75rem;
-        }
-        
-        .option-response h3 {
-          color: #2f855a;
-          margin-top: 0;
-          margin-bottom: 0.6rem;
-          font-size: 0.9rem;
-        }
-        
-        .option-response h4 {
-          color: #2d3748;
-          font-size: 0.8rem;
-          margin-top: 0.8rem;
-          margin-bottom: 0.4rem;
-        }
-        
-        .option-response p {
-          color: #4a5568;
-          line-height: 1.4;
-          margin-bottom: 0.4rem;
-        }
-        
-        .option-response li {
-          color: #4a5568;
-          margin-bottom: 0.3rem;
-          margin-left: 1rem;
-          font-size: 0.75rem;
-        }
-        
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(5px); }
+          from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
-        /* Enhanced mobile responsiveness */
+
         @media (max-width: 768px) {
-          .form-card, .info-card {
-            padding: 1rem;
-          }
-          
-          .form-title {
-            font-size: 1.1rem;
-          }
-          
-          .form-description {
-            font-size: 0.8rem;
-          }
-          
-          .form-fields {
-            grid-template-columns: 1fr;
-            gap: 0.75rem;
-          }
-          
           .form-progress {
-            margin-bottom: 1rem;
-          }
-          
-          .step-number {
-            width: 24px;
-            height: 24px;
-            font-size: 0.75rem;
+            margin-bottom: 1.5rem;
           }
           
           .step-label {
-            font-size: 0.65rem;
+            font-size: 0.75rem;
           }
           
           .prediction-details {
             flex-direction: column;
-            gap: 0.5rem;
-          }
-          
-          .prediction-value {
-            font-size: 2rem;
-          }
-          
-          .insight-card h4 {
-            font-size: 0.65rem;
-          }
-          
-          .rating-text {
-            font-size: 0.65rem;
-          }
-          
-          .insights-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-          
-          .option-button {
-            font-size: 0.65rem;
-            padding: 0.35rem;
-          }
-          
-          .options-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .option-response {
-            font-size: 0.7rem;
-          }
-          
-          .option-response h3 {
-            font-size: 0.85rem;
-          }
-          
-          .option-response h4 {
-            font-size: 0.75rem;
-          }
-          
-          .option-response li {
-            font-size: 0.7rem;
-          }
-        }
-        
-        /* Very small screens */
-        @media (max-width: 480px) {
-          .insights-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .insight-card {
-            padding: 0.4rem;
-          }
-          
-          .detail-label, .detail-value {
-            font-size: 0.7rem;
-          }
-          
-          .prediction-value {
-            font-size: 1.75rem;
-          }
-          
-          .prediction-unit {
-            font-size: 0.85rem;
-          }
-          
-          .form-nav {
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-          
-          .btn-next, .btn-submit, .btn-prev {
-            width: 100%;
-            justify-content: center;
+            gap: 1rem;
           }
         }
       `}</style>
@@ -2424,3 +1142,4 @@ ${getBestSellingWindow(true)}
 }
 
 export default YieldForm
+  
