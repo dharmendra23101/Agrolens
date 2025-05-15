@@ -7,8 +7,8 @@ import logging
 
 app = Flask(__name__)
 
-# Allow both local dev and deployed frontend
-CORS(app, origins=["https://agrolens-gamma.vercel.app"])
+CORS(app, resources={r"/*": {"origins": ["https://agrolens-gamma.vercel.app"]}}, supports_credentials=True)
+
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
