@@ -2186,7 +2186,7 @@ ${getBestSellingWindow(true)}
     
     try {
       console.log("Submitting form data:", formData);
-      const response = await axios.post('http://localhost:5001/predict_yield', formData)
+      const response = await axios.post(`${import.meta.env.VITE_YIELD_API}/predict`, formData);
       console.log("API response:", response.data);
       
       if (response.data && response.data.prediction) {
