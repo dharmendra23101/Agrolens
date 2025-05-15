@@ -4,7 +4,8 @@ import numpy as np
 import pickle
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
+CORS(app, resources={r"/*": {"origins": ["https://agrolens-gamma.vercel.app"]}}, supports_credentials=True)
+
 
 # Load model and label encoder
 try:
