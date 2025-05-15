@@ -1289,7 +1289,7 @@ JSON format:
       // If that fails, try direct OpenRouter call (not recommended for production!)
       console.error("Backend API error:", err);
       
-      const OPENROUTER_API_KEY = 'sk-or-v1-1203ae1...';  // Replace with actual key in secure way
+      const OPENROUTER_API_KEY = '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';  // Replace with actual key in secure way
       
       const openRouterResponse = await axios.post(
         'https://openrouter.ai/api/v1/chat/completions',
@@ -1824,7 +1824,7 @@ ${getDiseaseInfo(prediction)}
     setSelectedOption(null)
     
     try {
-      const response = await axios.post('http://localhost:5002/predict_crop', formData)
+      const response = await axios.post(`${import.meta.env.VITE_RECOMMEND_API}/predict_crop`, formData);
       setPrediction(response.data.crop)
       setShowResults(true)
       // Insights will be auto-generated via useEffect
