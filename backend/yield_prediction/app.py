@@ -6,7 +6,9 @@ import pandas as pd
 import logging
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
+
+# Enable CORS for your frontend origin only
+CORS(app, resources={r"/predict_yield": {"origins": "https://agrolens-gamma.vercel.app"}}, supports_credentials=True)
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -80,7 +82,6 @@ def predict_yield():
         
         # Make prediction
         prediction = regressor.predict(sample_encoded)[0]
-        # Convert NumPy float32 to Python float
         prediction = float(prediction)
         prediction = round(prediction, 2)
         logger.info(f"Prediction: {prediction}")
@@ -90,6 +91,15 @@ def predict_yield():
     except Exception as e:
         logger.error(f"Prediction error: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+# Explicitly handle OPTIONS preflight requests for /predict_yield
+@app.route('/predict_yield', methods=['OPTIONS'])
+def handle_options():
+    response = jsonify({})
+    response.headers.add("Access-Control-Allow-Origin", "https://agrolens-gamma.vercel.app")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    return response
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

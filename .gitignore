@@ -1,0 +1,16 @@
+# Ignore environment files
+*.env
+
+# Node modules
+**/node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Vite build files
+frontend/dist/
+
+# OS/System files
+.DS_Store
+Thumbs.db
