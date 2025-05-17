@@ -43,3 +43,71 @@ npm install
 
 # Start development server
 npm run dev
+```
+### Backend Setup
+```base
+# Setup Yield Prediction Service
+cd ../backend/yield_prediction
+pip install -r requirements.txt
+python app.py
+
+# Setup Recommendation Service
+cd ../recommendation
+pip install -r requirements.txt
+python app.py
+
+# Setup Chatbot Service
+cd ../chatbot
+npm install
+node chatbot.js
+```
+
+
+### Development
+# To run the project in development mode:
+```base
+# Frontend (from frontend directory)
+npm run dev
+
+# Access the application at http://localhost:5173
+```
+
+### Deployment
+## Vercel Deployment Notes
+To ensure proper functioning of client-side routing when deployed to Vercel, the project includes a vercel.json configuration file that redirects all routes to the main index.html file:
+
+```base
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+This configuration prevents 404 errors when refreshing pages or accessing routes directly.
+
+### Usage
+Visit the home page to learn about AgroLens features.  
+Use the navigation menu to access different tools:
+- **Yield Prediction** – Enter crop and field details to get yield estimates.
+- **Crop Recommendation** – Get suggestions for suitable crops based on soil data.
+- **Weather** – Check current and forecasted weather conditions.
+- **Contact** – Reach out to the AgroLens team with questions or feedback.
+
+### Contributing
+We welcome contributions to AgroLens! To contribute:
+- Fork the repository
+- Create your feature branch (`git checkout -b feature/amazing-feature`)
+- Commit your changes (`git commit -m 'Add some amazing feature'`)
+- Push to the branch (`git push origin feature/amazing-feature`)
+- Open a Pull Request
+
+### Contact
+## Dharmendra - GitHub Profile
+
+## Project Link: https://github.com/dharmendra23101/AgroLens
+
+Made with ❤️ for farmers everywhere
+
+This README provides comprehensive documentation for your AgroLens project, including installation instructions, project structure, and deployment notes. It highlights the key features of your application and provides clear guidance for both users and potential contributors.
+
