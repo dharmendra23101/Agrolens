@@ -157,7 +157,7 @@ function Footer() {
               <ul className={`footer-contact ${isMobile && !expandedSections.contact ? 'collapsed' : ''}`}>
                 <li>
                   <span className="contact-icon">✉️</span>
-                  <span className="contact-text">ddhruw3337@gmail.com</span>
+                  <span className="contact-text">dharmendra3337@gmail.com</span>
                 </li>
                 <li>
                   <span className="contact-icon">✉️</span>
