@@ -23,3 +23,50 @@ AgroLens is a comprehensive agricultural technology platform that helps farmers 
 - Python Flask for yield prediction and crop recommendation models
 - Node.js for chatbot functionality
 - Machine Learning models (Random Forest) for agricultural predictions
+
+## Project Structure
+AgroLens/
+├── backend/
+│   ├── chatbot/
+│   │   ├── chatbot.js
+│   │   ├── package-lock.json
+│   │   └── package.json
+│   ├── yield_prediction/
+│   │   ├── models/
+│   │   │   └── crop_yield_model.pkl
+│   │   ├── app.py
+│   │   └── requirements.txt
+│   ├── recommendation/
+│   │   ├── model/
+│   │   │   ├── multi_target_forest.pkl
+│   │   │   ├── label_encoder.pkl
+│   │   │   └── classes.npy
+│   │   ├── app.py
+│   │   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── YieldForm.jsx
+│   │   │   └── RecommendationForm.jsx
+│   │   ├── context/
+│   │   │   └── LanguageContext.jsx
+│   │   ├── pages/
+│   │   │   ├── Home.jsx
+│   │   │   ├── Weather.jsx
+│   │   │   ├── Contact.jsx
+│   │   │   ├── YieldPrediction.jsx
+│   │   │   └── CropRecommendation.jsx
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── .eslintrc.cjs
+├── README.md
+└── setup.ps1
