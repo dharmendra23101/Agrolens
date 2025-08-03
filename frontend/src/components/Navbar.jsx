@@ -1,32 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../context/LanguageContext';
+import Translatable from './Translatable';
 
 function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { language, changeLanguage, isHindi } = useContext(LanguageContext);
+  const { language, changeLanguage, isLoading, availableLanguages } = useContext(LanguageContext);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-
-  // Translations
-  const navTranslations = {
-    english: {
-      home: "Home",
-      yieldPrediction: "Yield Prediction",
-      cropRecommendation: "Crop Recommendation",
-      weather: "Weather",
-      contactUs: "Contact Us"
-    },
-    hindi: {
-      home: "होम",
-      yieldPrediction: "उपज का अनुमान",
-      cropRecommendation: "फसल अनुशंसा",
-      weather: "मौसम",
-      contactUs: "संपर्क करें"
-    }
-  };
-
-  const t = isHindi ? navTranslations.hindi : navTranslations.english;
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -79,8 +60,15 @@ function Navbar() {
   };
 
   const handleLanguageChange = (selectedLanguage) => {
+    console.log('[Navbar] Language selected:', selectedLanguage);
     changeLanguage(selectedLanguage);
     setIsLanguageDropdownOpen(false);
+  };
+
+  // Get current language name for display
+  const getCurrentLanguageName = () => {
+    const currentLang = availableLanguages.find(lang => lang.code === language);
+    return currentLang ? currentLang.name : 'English';
   };
 
   return (
@@ -96,10 +84,18 @@ function Navbar() {
           </button>
 
           <div className={`navbar-links ${isMobileMenuOpen ? 'active' : ''}`}>
-            <Link to="/" className="nav-link" onClick={closeMobileMenu}>{t.home}</Link>
-            <Link to="/yield-prediction" className="nav-link" onClick={closeMobileMenu}>{t.yieldPrediction}</Link>
-            <Link to="/crop-recommendation" className="nav-link" onClick={closeMobileMenu}>{t.cropRecommendation}</Link>
-            <Link to="/weather" className="nav-link" onClick={closeMobileMenu}>{t.weather}</Link>
+            <Link to="/" className="nav-link" onClick={closeMobileMenu}>
+              <Translatable>Home</Translatable>
+            </Link>
+            <Link to="/yield-prediction" className="nav-link" onClick={closeMobileMenu}>
+              <Translatable>Yield Prediction</Translatable>
+            </Link>
+            <Link to="/crop-recommendation" className="nav-link" onClick={closeMobileMenu}>
+              <Translatable>Crop Recommendation</Translatable>
+            </Link>
+            <Link to="/weather" className="nav-link" onClick={closeMobileMenu}>
+              <Translatable>Weather</Translatable>
+            </Link>
             
             {/* Language selector desktop view */}
             <div className="language-selector">
@@ -109,32 +105,40 @@ function Navbar() {
                 aria-label="Select language"
               >
                 <span className="language-icon">🌐</span>
-                <span className="language-text">{isHindi ? 'हिंदी' : 'English'}</span>
+                <span className="language-text">
+                  {isLoading ? '...' : getCurrentLanguageName()}
+                </span>
                 <span className="dropdown-arrow">▼</span>
               </button>
               
               {isLanguageDropdownOpen && (
                 <div className="language-dropdown">
-                  <button 
-                    className={`language-option ${language === 'english' ? 'active' : ''}`}
-                    onClick={() => handleLanguageChange('english')}
-                  >
-                    English
-                  </button>
-                  <button 
-                    className={`language-option ${language === 'hindi' ? 'active' : ''}`}
-                    onClick={() => handleLanguageChange('hindi')}
-                  >
-                    हिंदी (Hindi)
-                  </button>
+                  {availableLanguages.map(lang => (
+                    <button 
+                      key={lang.code}
+                      className={`language-option ${language === lang.code ? 'active' : ''}`}
+                      onClick={() => handleLanguageChange(lang.code)}
+                    >
+                      {lang.name}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
             
-            <Link to="/contact" className="nav-link contact-btn" onClick={closeMobileMenu}>{t.contactUs}</Link>
+            <Link to="/contact" className="nav-link contact-btn" onClick={closeMobileMenu}>
+              <Translatable>Contact Us</Translatable>
+            </Link>
           </div>
         </div>
       </nav>
+
+      {/* Translation loading indicator */}
+      {isLoading && (
+        <div className="translation-loading-indicator">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
 
       {/* Overlay for mobile menu */}
       {isMobileMenuOpen && (
@@ -282,7 +286,8 @@ function Navbar() {
           border-radius: 4px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           min-width: 140px;
-          overflow: hidden;
+          max-height: 300px;
+          overflow-y: auto;
           animation: dropdown-fade 0.2s ease-in-out;
         }
         
@@ -340,6 +345,31 @@ function Navbar() {
         
         .mobile-menu-overlay {
           display: none;
+        }
+        
+        /* Translation loading indicator */
+        .translation-loading-indicator {
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          background: rgba(255, 255, 255, 0.9);
+          padding: 8px;
+          border-radius: 50%;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          z-index: 9999;
+        }
+        
+        .loading-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(47, 133, 90, 0.3);
+          border-radius: 50%;
+          border-top-color: #2f855a;
+          animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         @media (max-width: 992px) {
@@ -401,6 +431,7 @@ function Navbar() {
             margin-top: 0.5rem;
             margin-left: 1.5rem;
             border-left: 2px solid #e2e8f0;
+            max-height: 200px;
           }
           
           .language-option {
@@ -496,6 +527,26 @@ function Navbar() {
           .language-toggle {
             font-size: 0.9rem;
           }
+        }
+        
+        /* Add translation loading and error styles */
+        .translating {
+          position: relative;
+          opacity: 0.9;
+          transition: opacity 0.3s ease;
+        }
+        
+        .translation-loading-dots {
+          display: inline-block;
+          margin-left: 3px;
+          font-size: 0.8em;
+          color: #2f855a;
+          animation: dot-blink 1s infinite;
+        }
+        
+        @keyframes dot-blink {
+          0%, 100% { opacity: 0; }
+          50% { opacity: 1; }
         }
       `}</style>
     </>
