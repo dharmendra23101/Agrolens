@@ -1,10 +1,11 @@
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect, useContext, useRef } from 'react'
 import axios from 'axios'
 import { LanguageContext } from '../context/LanguageContext'
-
+import Translatable from '../components/Translatable'
+import '../styles/YieldForm.css';
 function YieldForm() {
-  const { language, isHindi } = useContext(LanguageContext)
-  
+  const { language } = useContext(LanguageContext)
+
   const [formData, setFormData] = useState({
     soil_type: '',
     crop: '',
@@ -20,212 +21,556 @@ function YieldForm() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
   const [validationError, setValidationError] = useState(null)
+  const [insights, setInsights] = useState({})
+  const [selectedOption, setSelectedOption] = useState(null)
+  const [isInsightsLoading, setIsInsightsLoading] = useState(false)
+  const insightsRef = useRef(null)
 
-  // Translations
-  const translations = {
-    english: {
-      // Step labels
-      stepCropInfo: "Crop Info",
-      stepEnvironment: "Environment",
-      stepFarmingPractices: "Farming Practices",
-      stepResults: "Results",
-      
-      // Validation
-      validationErrorMessage: "Please fill all required fields before proceeding",
-      
-      // Step 1
-      cropInfoTitle: "Crop Information",
-      cropInfoDescription: "Tell us about your crop and soil conditions.",
-      soilType: "Soil Type",
-      soilTypeHelp: "The primary soil type in your field",
-      cropType: "Crop Type",
-      cropTypeHelp: "The crop you are planning to grow",
-      daysToHarvest: "Days to Harvest",
-      daysToHarvestHelp: "Expected days from planting to harvest",
-      
-      // Soil types
-      sandy: "Sandy",
-      clay: "Clay",
-      loam: "Loam",
-      silt: "Silt",
-      peaty: "Peaty",
-      chalky: "Chalky",
-      selectSoilType: "Select Soil Type",
-      
-      // Crop types
-      cotton: "Cotton",
-      rice: "Rice",
-      barley: "Barley",
-      soybean: "Soybean",
-      wheat: "Wheat",
-      maize: "Maize",
-      selectCrop: "Select Crop",
-      
-      // Step 2
-      environmentTitle: "Environmental Conditions",
-      environmentDescription: "Provide information about the climate and weather conditions.",
-      rainfall: "Rainfall (mm)",
-      rainfallHelp: "Average monthly rainfall in millimeters",
-      temperature: "Temperature (°C)",
-      temperatureHelp: "Average daily temperature in Celsius",
-      weatherCondition: "Weather Condition",
-      weatherHelp: "Predominant weather pattern during growing season",
-      
-      // Weather types
-      cloudy: "Cloudy",
-      rainy: "Rainy",
-      sunny: "Sunny",
-      selectWeather: "Select Weather Condition",
-      
-      // Step 3
-      farmingPracticesTitle: "Farming Practices",
-      farmingPracticesDescription: "Tell us about the agricultural techniques you're employing.",
-      fertilizerUsage: "Fertilizer Usage",
-      fertilizerHelp: "Whether you're using fertilizers",
-      irrigationSystem: "Irrigation System",
-      irrigationHelp: "Whether you're using an irrigation system",
-      yes: "Yes",
-      no: "No",
-      
-      // Navigation
-      next: "Next",
-      back: "Back",
-      predictYield: "Predict Yield",
-      processing: "Processing...",
-      startNew: "Start New Prediction",
-      tryAgain: "Try Again",
-      
-      // Results
-      resultsTitle: "Yield Prediction Results",
-      resultsDescription: "View your crop yield prediction based on provided data.",
-      resultComplete: "Yield Prediction Complete",
-      tonsPerHectare: "tons/hectare",
-      crop: "Crop",
-      soil: "Soil",
-      growth: "Growth",
-      days: "days",
-      resultTip: "Based on your inputs, we predict this yield for your {crop} crop. Actual yields may vary based on additional factors not included in this model.",
-      errorTitle: "Error",
-      errorTip: "Please check your inputs and try again. If the problem persists, our server may be experiencing issues.",
-      
-      // Info card
-      infoTitle: "Understanding Factors Affecting Crop Yield",
-      soilTypeInfo: "Soil Type",
-      soilTypeDescription: "Different crops thrive in different soil types. Loamy soil is generally considered optimal for most crops.",
-      weatherInfo: "Weather Conditions",
-      weatherDescription: "Weather patterns significantly impact crop development. Consistent conditions generally produce better yields.",
-      fertilizerInfo: "Fertilizer Usage",
-      fertilizerDescription: "Proper fertilization can increase yields by 30-50% by providing essential nutrients to crops.",
-      irrigationInfo: "Irrigation",
-      irrigationDescription: "Consistent irrigation reduces dependence on rainfall and can dramatically improve yields in drier regions."
-    },
-    hindi: {
-      // Step labels
-      stepCropInfo: "फसल जानकारी",
-      stepEnvironment: "पर्यावरण",
-      stepFarmingPractices: "खेती की प्रथाएँ",
-      stepResults: "परिणाम",
-      
-      // Validation
-      validationErrorMessage: "कृपया आगे बढ़ने से पहले सभी आवश्यक फ़ील्ड भरें",
-      
-      // Step 1
-      cropInfoTitle: "फसल की जानकारी",
-      cropInfoDescription: "हमें अपनी फसल और मिट्टी की स्थिति के बारे में बताएं।",
-      soilType: "मिट्टी का प्रकार",
-      soilTypeHelp: "आपके खेत में मुख्य मिट्टी का प्रकार",
-      cropType: "फसल का प्रकार",
-      cropTypeHelp: "आप जो फसल उगाने की योजना बना रहे हैं",
-      daysToHarvest: "कटाई तक के दिन",
-      daysToHarvestHelp: "रोपण से कटाई तक अपेक्षित दिन",
-      
-      // Soil types
-      sandy: "रेतीली (Sandy)",
-      clay: "चिकनी मिट्टी (Clay)",
-      loam: "दोमट मिट्टी (Loam)",
-      silt: "गाद मिट्टी (Silt)",
-      peaty: "पीटी मिट्टी (Peaty)",
-      chalky: "चूना मिट्टी (Chalky)",
-      selectSoilType: "मिट्टी का प्रकार चुनें",
-      
-      // Crop types
-      cotton: "कपास (Cotton)",
-      rice: "धान (Rice)",
-      barley: "जौ (Barley)",
-      soybean: "सोयाबीन (Soybean)",
-      wheat: "गेहूं (Wheat)",
-      maize: "मक्का (Maize)",
-      selectCrop: "फसल चुनें",
-      
-      // Step 2
-      environmentTitle: "पर्यावरण स्थितियां",
-      environmentDescription: "जलवायु और मौसम की स्थितियों के बारे में जानकारी प्रदान करें।",
-      rainfall: "वर्षा (मिमी)",
-      rainfallHelp: "मिलीमीटर में औसत मासिक वर्षा",
-      temperature: "तापमान (°C)",
-      temperatureHelp: "सेल्सियस में औसत दैनिक तापमान",
-      weatherCondition: "मौसम की स्थिति",
-      weatherHelp: "बढ़ते मौसम के दौरान प्रमुख मौसम पैटर्न",
-      
-      // Weather types
-      cloudy: "बादल (Cloudy)",
-      rainy: "बारिश (Rainy)",
-      sunny: "धूप (Sunny)",
-      selectWeather: "मौसम की स्थिति चुनें",
-      
-      // Step 3
-      farmingPracticesTitle: "खेती की प्रथाएँ",
-      farmingPracticesDescription: "हमें बताएं कि आप कौन सी कृषि तकनीकें अपना रहे हैं।",
-      fertilizerUsage: "उर्वरक का उपयोग",
-      fertilizerHelp: "क्या आप उर्वरकों का उपयोग कर रहे हैं",
-      irrigationSystem: "सिंचाई प्रणाली",
-      irrigationHelp: "क्या आप सिंचाई प्रणाली का उपयोग कर रहे हैं",
-      yes: "हां",
-      no: "नहीं",
-      
-      // Navigation
-      next: "अगला",
-      back: "पीछे",
-      predictYield: "उपज का अनुमान लगाएं",
-      processing: "प्रोसेसिंग...",
-      startNew: "नया अनुमान शुरू करें",
-      tryAgain: "पुनः प्रयास करें",
-      
-      // Results
-      resultsTitle: "उपज अनुमान परिणाम",
-      resultsDescription: "प्रदान किए गए डेटा के आधार पर अपनी फसल उपज अनुमान देखें।",
-      resultComplete: "उपज अनुमान पूर्ण",
-      tonsPerHectare: "टन/हेक्टेयर",
-      crop: "फसल",
-      soil: "मिट्टी",
-      growth: "विकास",
-      days: "दिन",
-      resultTip: "आपके इनपुट के आधार पर, हम आपकी {crop} फसल के लिए इस उपज का अनुमान लगाते हैं। वास्तविक उपज इस मॉडल में शामिल न किए गए अतिरिक्त कारकों के आधार पर भिन्न हो सकती है।",
-      errorTitle: "त्रुटि",
-      errorTip: "कृपया अपने इनपुट की जांच करें और पुनः प्रयास करें। यदि समस्या बनी रहती है, तो हमारा सर्वर समस्याओं का अनुभव कर रहा हो सकता है।",
-      
-      // Info card
-      infoTitle: "फसल उपज को प्रभावित करने वाले कारकों को समझना",
-      soilTypeInfo: "मिट्टी का प्रकार",
-      soilTypeDescription: "विभिन्न फसलें विभिन्न प्रकार की मिट्टी में पनपती हैं। दोमट मिट्टी को आमतौर पर अधिकांश फसलों के लिए इष्टतम माना जाता है।",
-      weatherInfo: "मौसम की स्थितियां",
-      weatherDescription: "मौसम पैटर्न फसल विकास पर महत्वपूर्ण प्रभाव डालते हैं। सुसंगत स्थितियां आमतौर पर बेहतर उपज देती हैं।",
-      fertilizerInfo: "उर्वरक का उपयोग",
-      fertilizerDescription: "फसलों को आवश्यक पोषक तत्व प्रदान करके उचित उर्वरण उपज को 30-50% तक बढ़ा सकता है।",
-      irrigationInfo: "सिंचाई",
-      irrigationDescription: "निरंतर सिंचाई वर्षा पर निर्भरता कम करती है और शुष्क क्षेत्रों में उपज में नाटकीय रूप से सुधार कर सकती है।"
-    }
-  }
-
-  const t = isHindi ? translations.hindi : translations.english
-
-  // Debug log to track state changes
+  // Generate insights when prediction is set
   useEffect(() => {
-    console.log("Current step:", step);
-    console.log("Prediction:", prediction);
-    console.log("Error:", error);
-  }, [step, prediction, error]);
+    if (prediction) {
+      generateInsights();
+    }
+  }, [prediction]);
 
+  // Scroll to insights when they change
+  useEffect(() => {
+    if (insightsRef.current && Object.keys(insights).length > 0) {
+      insightsRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [insights]);
+
+  // Generate insights for yield prediction
+  const generateInsights = () => {
+    setIsInsightsLoading(true);
+
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      // Generate insights based on prediction and form data
+      const insightsData = {
+        yieldQuality: getYieldQuality(),
+        profitPotential: getProfitPotential(),
+        resourceEfficiency: getResourceEfficiency(),
+        marketTiming: getMarketTiming(),
+        riskFactors: getRiskLevel(),
+        optimizationTip: getOptimizationTip()
+      };
+
+      setInsights(insightsData);
+      setIsInsightsLoading(false);
+    }, 1200);
+  };
+
+  // Calculate yield quality based on inputs
+  const getYieldQuality = () => {
+    // Logic to determine yield quality
+    const predictedYield = parseFloat(prediction);
+
+    if (predictedYield > 4.5) return language === 'hi' ? "उत्कृष्ट" : "excellent";
+    if (predictedYield > 3.5) return language === 'hi' ? "अच्छा" : "good";
+    if (predictedYield > 2.5) return language === 'hi' ? "औसत" : "average";
+    if (predictedYield > 1.5) return language === 'hi' ? "उचित" : "fair";
+    return language === 'hi' ? "कमज़ोर" : "poor";
+  };
+
+  // Calculate profit potential
+  const getProfitPotential = () => {
+    // Logic to determine profit potential
+    const weather = formData.weather;
+    const fertilizer = formData.fertilizer === "Yes";
+    const irrigation = formData.irrigation === "Yes";
+
+    if ((weather === "Sunny" || weather === "Cloudy") && fertilizer && irrigation) {
+      return language === 'hi' ? "उच्च" : "high";
+    }
+    if (fertilizer || irrigation) {
+      return language === 'hi' ? "मध्यम" : "medium";
+    }
+    return language === 'hi' ? "निम्न" : "low";
+  };
+
+  // Calculate resource efficiency
+  const getResourceEfficiency = () => {
+    // Logic to determine resource efficiency
+    const rainfall = parseInt(formData.rainfall);
+    const irrigation = formData.irrigation === "Yes";
+
+    if (rainfall > 200 && !irrigation) return language === 'hi' ? "उत्कृष्ट" : "excellent";
+    if ((rainfall > 150 && !irrigation) || (rainfall < 100 && irrigation)) return language === 'hi' ? "अच्छा" : "good";
+    return language === 'hi' ? "औसत" : "average";
+  };
+
+  // Calculate market timing
+  const getMarketTiming = () => {
+    // Logic to determine market timing
+    const daysToHarvest = parseInt(formData.days_to_harvest);
+
+    if (daysToHarvest < 60) return language === 'hi' ? "इष्टतम" : "optimal";
+    if (daysToHarvest < 90) return language === 'hi' ? "अच्छा" : "good";
+    return language === 'hi' ? "उप-इष्टतम" : "suboptimal";
+  };
+
+  // Calculate risk level
+  const getRiskLevel = () => {
+    // Logic to determine risk level
+    const weather = formData.weather;
+    const irrigation = formData.irrigation === "Yes";
+
+    if (weather === "Rainy" && !irrigation) return language === 'hi' ? "उच्च" : "high";
+    if (weather === "Sunny" && !irrigation) return language === 'hi' ? "मध्यम" : "medium";
+    return language === 'hi' ? "निम्न" : "low";
+  };
+
+  // Get optimization tip
+  const getOptimizationTip = () => {
+    // Logic to determine optimization tip
+    const fertilizer = formData.fertilizer === "Yes";
+    const irrigation = formData.irrigation === "Yes";
+    const soil = formData.soil_type;
+
+    if (!fertilizer) {
+      return language === 'hi' ?
+        "फसल के प्रकार के अनुसार उचित उर्वरक का उपयोग करके उपज 20-30% तक बढ़ाएं।" :
+        "Increase yield by 20-30% using appropriate fertilizers for your crop type.";
+    }
+
+    if (!irrigation) {
+      return language === 'hi' ?
+        "सूखा अवधि के दौरान उपज की सुरक्षा के लिए बारिश के पानी का संरक्षण करें या सिंचाई लागू करें।" :
+        "Conserve rainwater or implement irrigation to protect yield during dry periods.";
+    }
+
+    if (soil === "Sandy") {
+      return language === 'hi' ?
+        "रेतीली मिट्टी में जैविक पदार्थ जोड़ें और अधिक बार पानी दें लेकिन कम मात्रा में।" :
+        "Add organic matter to sandy soil and water more frequently but in smaller amounts.";
+    }
+
+    return language === 'hi' ?
+      "फसल की निगरानी नियमित रूप से करें और मौसम के पूर्वानुमान के आधार पर अपनी खेती की गतिविधियों की योजना बनाएं।" :
+      "Monitor crops regularly and plan your farming activities based on weather forecasts.";
+  };
+
+  // Handle option selection
+  const handleOptionClick = (option) => {
+    setSelectedOption(option);
+    setIsInsightsLoading(true);
+
+    setTimeout(() => {
+      setIsInsightsLoading(false);
+    }, 800);
+  };
+
+  // Reset option selection
+  const resetOptionSelection = () => {
+    setSelectedOption(null);
+  };
+
+  // Get option response based on selection
+  const getOptionResponse = () => {
+    if (!selectedOption) return '';
+
+    // Define all responses for all options
+    const responses = {
+      increase: {
+        title: "How to Increase Your " + formData.crop + " Yield",
+        subtitle: "Key Strategies:",
+        bullets: [
+          getKeyIncreaseStrategy1(),
+          getKeyIncreaseStrategy2(),
+          getKeyIncreaseStrategy3()
+        ],
+        subtitle2: "For Your Specific Conditions:",
+        content: `Based on your ${formData.soil_type} soil and ${formData.weather.toLowerCase()} weather conditions, focus on ${getSpecificIncreaseStrategy()}.`
+      },
+      risks: {
+        title: "Main Risks for Your " + formData.crop + " Crop",
+        subtitle: "Current Risk Level: " + getRiskLevel(),
+        subtitle2: "Top Concerns:",
+        bullets: [
+          getMainRisk1(),
+          getMainRisk2(),
+          getMainRisk3()
+        ],
+        subtitle3: "Mitigation Strategy:",
+        content: getRiskMitigation()
+      },
+      harvest: {
+        title: "Best Harvest Window for " + formData.crop,
+        subtitle: "Optimal Timing:",
+        content: `Your crop should be ready in about ${formData.days_to_harvest} days from planting.
+The best harvest window is ${getHarvestWindow()}.`,
+        subtitle2: "Harvest Indicators:",
+        content2: `Look for ${getHarvestIndicators()}`,
+        subtitle3: "Weather Consideration:",
+        content3: getHarvestWeatherTip()
+      },
+      storage: {
+        title: "Storage Considerations for " + formData.crop,
+        subtitle: "Recommended Conditions:",
+        bullets: [
+          "Temperature: " + getStorageTemp(),
+          "Humidity: " + getStorageHumidity(),
+          "Ventilation: " + getStorageVentilation()
+        ],
+        subtitle2: "Max Storage Duration:",
+        content: "With proper conditions: " + getStorageDuration(),
+        subtitle3: "Key Storage Tip:",
+        content2: getStorageTip()
+      },
+      alternatives: {
+        title: "Alternative Crops for Your Conditions",
+        content: `Based on your soil type (${formData.soil_type}) and climate inputs:`,
+        subtitle: "Recommended Alternatives:",
+        bullets: [
+          getAlternativeCrop1() + ": " + getAlternativeReason1(),
+          getAlternativeCrop2() + ": " + getAlternativeReason2(),
+          getAlternativeCrop3() + ": " + getAlternativeReason3()
+        ],
+        subtitle2: "Comparison with Current Choice:",
+        content2: getAlternativeComparison()
+      },
+      market: {
+        title: "Market Outlook for " + formData.crop,
+        subtitle: "Current Trend:",
+        content: getMarketTrend(),
+        subtitle2: "Price Forecast:",
+        content2: getPriceForecast(),
+        subtitle3: "Demand Drivers:",
+        bullets: [
+          getDemandDriver1(),
+          getDemandDriver2()
+        ],
+        subtitle4: "Best Selling Window:",
+        content3: getBestSellingWindow()
+      }
+    };
+
+    return responses[selectedOption];
+  };
+
+  // Helper functions for generating option responses
+  const getKeyIncreaseStrategy1 = () => {
+    const strategies = [
+      "Optimize plant spacing based on soil fertility",
+      "Apply precision fertilization at critical growth stages",
+      "Implement proper weed management early in growth cycle"
+    ];
+
+    return strategies[Math.floor(Math.random() * strategies.length)];
+  };
+
+  const getKeyIncreaseStrategy2 = () => {
+    const strategies = [
+      "Monitor and maintain optimal soil moisture",
+      "Use disease-resistant varieties suited to your region",
+      "Apply foliar sprays at recommended intervals"
+    ];
+
+    return strategies[Math.floor(Math.random() * strategies.length)];
+  };
+
+  const getKeyIncreaseStrategy3 = () => {
+    const strategies = [
+      "Practice crop rotation to break pest cycles",
+      "Time planting according to seasonal conditions",
+      "Use integrated pest management techniques"
+    ];
+
+    return strategies[Math.floor(Math.random() * strategies.length)];
+  };
+
+  const getSpecificIncreaseStrategy = () => {
+    if (formData.soil_type === "Sandy") {
+      return "adding more organic matter and improving water retention";
+    }
+
+    if (formData.soil_type === "Clay") {
+      return "improving drainage and soil structure";
+    }
+
+    if (formData.weather === "Rainy") {
+      return "ensuring good drainage and controlling fungal diseases";
+    }
+
+    if (formData.weather === "Sunny" && formData.irrigation === "No") {
+      return "water conservation techniques and mulching";
+    }
+
+    return "overall soil health and nutrient management";
+  };
+
+  const getMainRisk1 = () => {
+    const map = {
+      "Rainy": "Fungal diseases due to excess moisture",
+      "Sunny": "Drought stress and water scarcity",
+      "Cloudy": "Insufficient photosynthesis"
+    };
+
+    return map[formData.weather] || "Weather variability";
+  };
+
+  const getMainRisk2 = () => {
+    const map = {
+      "Sandy": "Rapid leaching of water and nutrients",
+      "Clay": "Waterlogging and root diseases",
+      "Loam": "Weed competition",
+      "Silt": "Soil crusting and poor germination"
+    };
+
+    return map[formData.soil_type] || "Soil compatibility";
+  };
+
+  const getMainRisk3 = () => {
+    if (formData.fertilizer === "No") {
+      return "Nutrient deficiency and slow growth";
+    }
+
+    if (formData.irrigation === "No") {
+      return "Irregular growth in dry conditions";
+    }
+
+    const options = ["Pest infestation", "Price volatility", "Disease outbreaks"];
+
+    return options[Math.floor(Math.random() * options.length)];
+  };
+
+  const getRiskMitigation = () => {
+    if (formData.weather === "Rainy" && formData.soil_type === "Clay") {
+      return "Create raised beds and ensure good drainage. Monitor for fungal diseases regularly and apply preventive sprays.";
+    }
+
+    if (formData.weather === "Sunny" && formData.irrigation === "No") {
+      return "Use mulch to retain soil moisture. Consider drought-resistant varieties and implement water conservation techniques.";
+    }
+
+    if (formData.fertilizer === "No") {
+      return "Apply balanced fertilizers according to crop-specific requirements. Conduct soil tests and monitor for nutrient deficiencies.";
+    }
+
+    return "Practice integrated pest management. Monitor weather and plan farming activities accordingly. Reduce risk through diversification.";
+  };
+
+  const getHarvestWindow = () => {
+    const daysToHarvest = parseInt(formData.days_to_harvest);
+
+    if (daysToHarvest < 70) {
+      return "60-70 days after planting";
+    } else if (daysToHarvest < 100) {
+      return "90-100 days after planting";
+    } else {
+      return "120-130 days after planting";
+    }
+  };
+
+  const getHarvestIndicators = () => {
+    const cropMap = {
+      "Rice": "yellow-golden grains, 80-85% maturity",
+      "Wheat": "yellow-brown stems, hard grains",
+      "Maize": "dry silk, fully filled ears",
+      "Cotton": "open bolls, white fiber",
+      "Barley": "yellow-golden spikes, dry grains",
+      "Soybean": "brown-yellow pods, most leaves fallen"
+    };
+
+    return cropMap[formData.crop] || "mature color and proper size";
+  };
+
+  const getHarvestWeatherTip = () => {
+    if (formData.weather === "Rainy") {
+      return "Avoid harvesting after rain as it can increase moisture and affect quality during storage. Wait for dry days.";
+    }
+
+    if (formData.weather === "Sunny") {
+      return "Harvest during morning or evening to avoid excessive heat. Process promptly if possible to prevent crop degradation.";
+    }
+
+    return "Ensure the crop is dry and preferably harvest during morning hours when temperatures are moderate.";
+  };
+
+  const getStorageTemp = () => {
+    const cropMap = {
+      "Rice": "12-15°C",
+      "Wheat": "10-15°C",
+      "Maize": "10-15°C",
+      "Cotton": "15-20°C",
+      "Barley": "10-15°C",
+      "Soybean": "8-12°C"
+    };
+
+    return cropMap[formData.crop] || "10-15°C";
+  };
+
+  const getStorageHumidity = () => {
+    const cropMap = {
+      "Rice": "60-70%",
+      "Wheat": "55-65%",
+      "Maize": "60-70%",
+      "Cotton": "40-60%",
+      "Barley": "55-65%",
+      "Soybean": "65-70%"
+    };
+
+    return cropMap[formData.crop] || "60-70%";
+  };
+
+  const getStorageVentilation = () => {
+    return "Good";
+  };
+
+  const getStorageDuration = () => {
+    const cropMap = {
+      "Rice": "6-12 months",
+      "Wheat": "8-12 months",
+      "Maize": "6-8 months",
+      "Cotton": "8-10 months",
+      "Barley": "8-10 months",
+      "Soybean": "6-8 months"
+    };
+
+    return cropMap[formData.crop] || "6-8 months";
+  };
+
+  const getStorageTip = () => {
+    return "Keep in dry, ventilated place and check regularly.";
+  };
+
+  const getAlternativeCrop1 = () => {
+    // Suggest alternative crops based on current crop and soil type
+    const alternatives = {
+      "Rice": "Maize",
+      "Wheat": "Barley",
+      "Maize": "Sunflower",
+      "Cotton": "Soybean",
+      "Barley": "Wheat",
+      "Soybean": "Mung Bean"
+    };
+
+    return alternatives[formData.crop] || "Wheat";
+  };
+
+  const getAlternativeCrop2 = () => {
+    const alternatives = {
+      "Rice": "Black Gram",
+      "Wheat": "Mustard",
+      "Maize": "Millet",
+      "Cotton": "Groundnut",
+      "Barley": "Chickpea",
+      "Soybean": "Lentil"
+    };
+
+    return alternatives[formData.crop] || "Chickpea";
+  };
+
+  const getAlternativeCrop3 = () => {
+    const alternatives = {
+      "Rice": "Mung Bean",
+      "Wheat": "Maize",
+      "Maize": "Soybean",
+      "Cotton": "Sorghum",
+      "Barley": "Oats",
+      "Soybean": "Sunflower"
+    };
+
+    return alternatives[formData.crop] || "Mustard";
+  };
+
+  const getAlternativeReason1 = () => {
+    if (formData.soil_type === "Sandy") {
+      return "Drought resistant, requires less water";
+    }
+
+    if (formData.soil_type === "Clay") {
+      return "Improves soil structure";
+    }
+
+    return "Similar weather requirements, good rotation option";
+  };
+
+  const getAlternativeReason2 = () => {
+    if (formData.weather === "Rainy") {
+      return "Performs well in higher moisture conditions";
+    }
+
+    if (formData.weather === "Sunny") {
+      return "Drought tolerant, needs less water";
+    }
+
+    return "Lower inputs, good market value";
+  };
+
+  const getAlternativeReason3 = () => {
+    if (formData.fertilizer === "No") {
+      return "Requires less fertilizer";
+    }
+
+    if (formData.irrigation === "No") {
+      return "Grows well on rainfall";
+    }
+
+    return "Good for diversification, lower risk";
+  };
+
+  const getAlternativeComparison = () => {
+    return `Compared to ${formData.crop}, these alternatives offer either lower water requirements, reduced input costs, or better weather adaptability. Consider a mix of 2-3 crops to reduce risk based on your situation.`;
+  };
+
+  const getMarketTrend = () => {
+    const trends = [
+      `${formData.crop} prices have been steadily rising over the past season due to increased demand.`,
+      `${formData.crop} market has shown stability with slight upward movement.`,
+      `${formData.crop} has experienced price fluctuations but maintains overall positive trend.`
+    ];
+
+    return trends[Math.floor(Math.random() * trends.length)];
+  };
+
+  const getPriceForecast = () => {
+    if (formData.fertilizer === "Yes" && formData.irrigation === "Yes") {
+      return "Likely to increase 10-15% in the coming season, especially for high-quality produce";
+    }
+
+    return "Expected to remain stable over next 3-6 months, with seasonal fluctuations";
+  };
+
+  const getDemandDriver1 = () => {
+    const drivers = [
+      "Increasing consumer preference for sustainable farming products",
+      "Growing export market opportunities",
+      "Rising demand in food processing industries"
+    ];
+
+    return drivers[Math.floor(Math.random() * drivers.length)];
+  };
+
+  const getDemandDriver2 = () => {
+    const drivers = [
+      "Government policies supporting domestic agriculture",
+      "Increasing population and food security needs",
+      "Climate-induced shortages in competing regions"
+    ];
+
+    return drivers[Math.floor(Math.random() * drivers.length)];
+  };
+
+  const getBestSellingWindow = () => {
+    // Logic to determine best selling window
+    const daysToHarvest = parseInt(formData.days_to_harvest);
+    let harvestMonth;
+
+    // Assuming planting in May
+    if (daysToHarvest < 80) {
+      harvestMonth = "July-August";
+    } else if (daysToHarvest < 120) {
+      harvestMonth = "August-September";
+    } else {
+      harvestMonth = "October-November";
+    }
+
+    return `Don't sell immediately after harvest. Consider selling 3-4 weeks after your ${harvestMonth} harvest when supply is lower and prices are higher.`;
+  };
+
+  // Handle form input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
     setValidationError(null) // Clear validation errors when user makes changes
@@ -236,12 +581,14 @@ function YieldForm() {
     setLoading(true)
     setError(null)
     setPrediction(null) // Reset prediction before new request
-    
+    setInsights({})
+    setSelectedOption(null)
+
     try {
       console.log("Submitting form data:", formData);
-      const response = await axios.post(`${import.meta.env.VITE_YIELD_API}/predict_yield`, formData);
+      const response = await axios.post('http://localhost:5001/predict_yield', formData)
       console.log("API response:", response.data);
-      
+
       if (response.data && response.data.prediction) {
         setPrediction(response.data.prediction)
         // Force step update to 4 directly instead of using nextStep function
@@ -259,16 +606,16 @@ function YieldForm() {
   }
 
   const validateStep = (currentStep) => {
-    switch(currentStep) {
+    switch (currentStep) {
       case 1:
         if (!formData.soil_type || !formData.crop || !formData.days_to_harvest) {
-          setValidationError(t.validationErrorMessage)
+          setValidationError(<Translatable>Please fill in all required fields before proceeding.</Translatable>)
           return false
         }
         break
       case 2:
         if (!formData.rainfall || !formData.temperature || !formData.weather) {
-          setValidationError(t.validationErrorMessage)
+          setValidationError(<Translatable>Please fill in all required fields before proceeding.</Translatable>)
           return false
         }
         break
@@ -278,7 +625,7 @@ function YieldForm() {
       default:
         return true
     }
-    
+
     setValidationError(null)
     return true
   }
@@ -298,20 +645,124 @@ function YieldForm() {
     setPrediction(null)
     setError(null)
     setStep(1)
+    setInsights({})
+    setSelectedOption(null)
   }
 
   // Helper to get crop name in current language
   const getLocalizedCropName = (cropName) => {
-    const cropTranslations = {
-      "Cotton": isHindi ? "कपास" : "Cotton",
-      "Rice": isHindi ? "धान" : "Rice", 
-      "Barley": isHindi ? "जौ" : "Barley",
-      "Soybean": isHindi ? "सोयाबीन" : "Soybean",
-      "Wheat": isHindi ? "गेहूं" : "Wheat",
-      "Maize": isHindi ? "मक्का" : "Maize"
+    return <Translatable>{cropName}</Translatable>;
+  };
+
+  // Get visual rating for insights
+  // Fix for the getRatingVisual function to eliminate duplicate keys
+  const getRatingVisual = (value) => {
+    if (!value) return '—';
+
+    // Map text values to numeric for visualization - fixed to avoid duplicate keys
+    const ratingMap = {
+      // English quality ratings (5-point scale)
+      'excellent': 5,
+      'good': 4,
+      'average': 3,
+      'fair': 2,
+      'poor': 1,
+
+      // Hindi quality ratings (5-point scale)
+      'उत्कृष्ट': 5,
+      'अच्छा': 4,
+      'औसत': 3,
+      'उचित': 2,
+      'कमज़ोर': 1,
+
+      // English intensity ratings (3-point scale)
+      'high': 3,
+      'medium': 2,
+      'low': 1,
+
+      // Hindi intensity ratings (3-point scale)
+      'उच्च': 3,
+      'मध्यम': 2,
+      'निम्न': 1,
+
+      // English status ratings (3-point scale)
+      'optimal': 3,
+      'suboptimal': 1,
+
+      // Hindi status ratings (3-point scale)
+      'इष्टतम': 3,
+      'उप-इष्टतम': 1
     };
-    
-    return cropTranslations[cropName] || cropName;
+
+    const rating = ratingMap[value.toLowerCase()] || 3;
+
+    // Determine the max rating based on the type of value
+    let maxRating = 3; // Default to 3-point scale
+
+    // Check if it's a quality rating (5-point scale)
+    const qualityRatings = ['excellent', 'good', 'average', 'fair', 'poor',
+      'उत्कृष्ट', 'अच्छा', 'औसत', 'उचित', 'कमज़ोर'];
+
+    if (qualityRatings.includes(value.toLowerCase())) {
+      maxRating = 5;
+    }
+
+    return (
+      <div className="rating-visual">
+        {[...Array(maxRating)].map((_, i) => (
+          <span key={i} className={`rating-dot ${i < rating ? 'active' : ''}`}></span>
+        ))}
+        <span className="rating-text">{value}</span>
+      </div>
+    );
+  };
+
+  // Render the option response
+  const renderOptionResponse = () => {
+    const response = getOptionResponse();
+    if (!response) return null;
+
+    return (
+      <div className="option-response">
+        <h3><Translatable>{response.title}</Translatable></h3>
+
+        {response.subtitle && (
+          <h4><Translatable>{response.subtitle}</Translatable></h4>
+        )}
+
+        {response.bullets && (
+          <ul>
+            {response.bullets.map((bullet, index) => (
+              <li key={index}><Translatable>{bullet}</Translatable></li>
+            ))}
+          </ul>
+        )}
+
+        {response.content && (
+          <p><Translatable>{response.content}</Translatable></p>
+        )}
+
+        {response.subtitle2 && (
+          <h4><Translatable>{response.subtitle2}</Translatable></h4>
+        )}
+
+        {response.content2 && (
+          <p><Translatable>{response.content2}</Translatable></p>
+        )}
+
+        {response.subtitle3 && (
+          <h4><Translatable>{response.subtitle3}</Translatable></h4>
+        )}
+
+        {response.content3 && (
+          <p><Translatable>{response.content3}</Translatable></p>
+        )}
+
+        {response.subtitle4 && (
+          <h4><Translatable>{response.subtitle4}</Translatable></h4>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -320,22 +771,22 @@ function YieldForm() {
         <div className="form-progress">
           <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>
             <div className="step-number">1</div>
-            <div className="step-label">{t.stepCropInfo}</div>
+            <div className="step-label"><Translatable>Crop Information</Translatable></div>
           </div>
           <div className="progress-line"></div>
           <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>
             <div className="step-number">2</div>
-            <div className="step-label">{t.stepEnvironment}</div>
+            <div className="step-label"><Translatable>Environment</Translatable></div>
           </div>
           <div className="progress-line"></div>
           <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>
             <div className="step-number">3</div>
-            <div className="step-label">{t.stepFarmingPractices}</div>
+            <div className="step-label"><Translatable>Farming Practices</Translatable></div>
           </div>
           <div className="progress-line"></div>
           <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>
             <div className="step-number">4</div>
-            <div className="step-label">{t.stepResults}</div>
+            <div className="step-label"><Translatable>Results</Translatable></div>
           </div>
         </div>
 
@@ -346,23 +797,18 @@ function YieldForm() {
           </div>
         )}
 
-        {/* Debug info - remove in production */}
-        <div className="debug-info" style={{display: 'none'}}>
-          Current Step: {step} | Has Prediction: {prediction ? 'Yes' : 'No'} | Has Error: {error ? 'Yes' : 'No'}
-        </div>
-
         <form onSubmit={handleSubmit} className="form">
           {step === 1 && (
             <div className="form-step">
-              <h2 className="form-title">{t.cropInfoTitle}</h2>
+              <h2 className="form-title"><Translatable>Tell us about your crop</Translatable></h2>
               <p className="form-description">
-                {t.cropInfoDescription}
+                <Translatable>Provide information about your soil type and crop selection to help us make accurate predictions.</Translatable>
               </p>
-              
+
               <div className="form-fields">
                 <div className="form-group">
                   <label htmlFor="soil_type">
-                    {t.soilType} <span className="required">*</span>
+                    <Translatable>Soil Type</Translatable> <span className="required">*</span>
                   </label>
                   <select
                     id="soil_type"
@@ -371,20 +817,20 @@ function YieldForm() {
                     onChange={handleChange}
                     required
                   >
-                    <option value="" disabled>{t.selectSoilType}</option>
-                    <option value="Sandy">{t.sandy}</option>
-                    <option value="Clay">{t.clay}</option>
-                    <option value="Loam">{t.loam}</option>
-                    <option value="Silt">{t.silt}</option>
-                    <option value="Peaty">{t.peaty}</option>
-                    <option value="Chalky">{t.chalky}</option>
+                    <option value="" disabled><Translatable>Select soil type</Translatable></option>
+                    <option value="Sandy"><Translatable>Sandy</Translatable></option>
+                    <option value="Clay"><Translatable>Clay</Translatable></option>
+                    <option value="Loam"><Translatable>Loam</Translatable></option>
+                    <option value="Silt"><Translatable>Silt</Translatable></option>
+                    <option value="Peaty"><Translatable>Peaty</Translatable></option>
+                    <option value="Chalky"><Translatable>Chalky</Translatable></option>
                   </select>
-                  <small className="input-help">{t.soilTypeHelp}</small>
+                  <small className="input-help"><Translatable>Different soil types affect water retention and nutrient availability</Translatable></small>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="crop">
-                    {t.cropType} <span className="required">*</span>
+                    <Translatable>Crop Type</Translatable> <span className="required">*</span>
                   </label>
                   <select
                     id="crop"
@@ -393,20 +839,20 @@ function YieldForm() {
                     onChange={handleChange}
                     required
                   >
-                    <option value="" disabled>{t.selectCrop}</option>
-                    <option value="Cotton">{t.cotton}</option>
-                    <option value="Rice">{t.rice}</option>
-                    <option value="Barley">{t.barley}</option>
-                    <option value="Soybean">{t.soybean}</option>
-                    <option value="Wheat">{t.wheat}</option>
-                    <option value="Maize">{t.maize}</option>
+                    <option value="" disabled><Translatable>Select crop</Translatable></option>
+                    <option value="Cotton"><Translatable>Cotton</Translatable></option>
+                    <option value="Rice"><Translatable>Rice</Translatable></option>
+                    <option value="Barley"><Translatable>Barley</Translatable></option>
+                    <option value="Soybean"><Translatable>Soybean</Translatable></option>
+                    <option value="Wheat"><Translatable>Wheat</Translatable></option>
+                    <option value="Maize"><Translatable>Maize</Translatable></option>
                   </select>
-                  <small className="input-help">{t.cropTypeHelp}</small>
+                  <small className="input-help"><Translatable>Select the crop for which you want to predict yield</Translatable></small>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="days_to_harvest">
-                    {t.daysToHarvest} <span className="required">*</span>
+                    <Translatable>Days to Harvest</Translatable> <span className="required">*</span>
                   </label>
                   <input
                     type="number"
@@ -417,30 +863,30 @@ function YieldForm() {
                     placeholder="60-150"
                     required
                   />
-                  <small className="input-help">{t.daysToHarvestHelp}</small>
+                  <small className="input-help"><Translatable>Estimated number of days from planting to harvest</Translatable></small>
                 </div>
               </div>
-              
+
               <div className="form-nav">
                 <div></div> {/* Empty div for spacing */}
                 <button type="button" className="btn-next" onClick={nextStep}>
-                  {t.next} <span className="arrow">→</span>
+                  <Translatable>Next</Translatable> <span className="arrow">→</span>
                 </button>
               </div>
             </div>
           )}
-          
+
           {step === 2 && (
             <div className="form-step">
-              <h2 className="form-title">{t.environmentTitle}</h2>
+              <h2 className="form-title"><Translatable>Environmental conditions</Translatable></h2>
               <p className="form-description">
-                {t.environmentDescription}
+                <Translatable>Climate and weather factors greatly influence crop growth and yield potential.</Translatable>
               </p>
-              
+
               <div className="form-fields">
                 <div className="form-group">
                   <label htmlFor="rainfall">
-                    {t.rainfall} <span className="required">*</span>
+                    <Translatable>Rainfall</Translatable> <span className="required">*</span>
                   </label>
                   <input
                     type="number"
@@ -451,12 +897,12 @@ function YieldForm() {
                     placeholder="0-500"
                     required
                   />
-                  <small className="input-help">{t.rainfallHelp}</small>
+                  <small className="input-help"><Translatable>Average rainfall in millimeters</Translatable></small>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="temperature">
-                    {t.temperature} <span className="required">*</span>
+                    <Translatable>Temperature</Translatable> <span className="required">*</span>
                   </label>
                   <input
                     type="number"
@@ -467,12 +913,12 @@ function YieldForm() {
                     placeholder="10-40"
                     required
                   />
-                  <small className="input-help">{t.temperatureHelp}</small>
+                  <small className="input-help"><Translatable>Average temperature in degrees Celsius</Translatable></small>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="weather">
-                    {t.weatherCondition} <span className="required">*</span>
+                    <Translatable>Weather Condition</Translatable> <span className="required">*</span>
                   </label>
                   <select
                     id="weather"
@@ -481,36 +927,36 @@ function YieldForm() {
                     onChange={handleChange}
                     required
                   >
-                    <option value="" disabled>{t.selectWeather}</option>
-                    <option value="Cloudy">{t.cloudy}</option>
-                    <option value="Rainy">{t.rainy}</option>
-                    <option value="Sunny">{t.sunny}</option>
+                    <option value="" disabled><Translatable>Select weather</Translatable></option>
+                    <option value="Cloudy"><Translatable>Cloudy</Translatable></option>
+                    <option value="Rainy"><Translatable>Rainy</Translatable></option>
+                    <option value="Sunny"><Translatable>Sunny</Translatable></option>
                   </select>
-                  <small className="input-help">{t.weatherHelp}</small>
+                  <small className="input-help"><Translatable>Predominant weather condition during growing season</Translatable></small>
                 </div>
               </div>
-              
+
               <div className="form-nav">
                 <button type="button" className="btn-prev" onClick={prevStep}>
-                  <span className="arrow">←</span> {t.back}
+                  <span className="arrow">←</span> <Translatable>Back</Translatable>
                 </button>
                 <button type="button" className="btn-next" onClick={nextStep}>
-                  {t.next} <span className="arrow">→</span>
+                  <Translatable>Next</Translatable> <span className="arrow">→</span>
                 </button>
               </div>
             </div>
           )}
-          
+
           {step === 3 && (
             <div className="form-step">
-              <h2 className="form-title">{t.farmingPracticesTitle}</h2>
+              <h2 className="form-title"><Translatable>Farming practices</Translatable></h2>
               <p className="form-description">
-                {t.farmingPracticesDescription}
+                <Translatable>Agricultural practices significantly affect crop yields and sustainability.</Translatable>
               </p>
-              
+
               <div className="form-fields">
                 <div className="form-group">
-                  <label htmlFor="fertilizer">{t.fertilizerUsage}</label>
+                  <label htmlFor="fertilizer"><Translatable>Fertilizer Usage</Translatable></label>
                   <div className="radio-group">
                     <div className="radio-option">
                       <input
@@ -521,7 +967,7 @@ function YieldForm() {
                         checked={formData.fertilizer === "Yes"}
                         onChange={handleChange}
                       />
-                      <label htmlFor="fertilizer-yes">{t.yes}</label>
+                      <label htmlFor="fertilizer-yes"><Translatable>Yes</Translatable></label>
                     </div>
                     <div className="radio-option">
                       <input
@@ -532,14 +978,14 @@ function YieldForm() {
                         checked={formData.fertilizer === "No"}
                         onChange={handleChange}
                       />
-                      <label htmlFor="fertilizer-no">{t.no}</label>
+                      <label htmlFor="fertilizer-no"><Translatable>No</Translatable></label>
                     </div>
                   </div>
-                  <small className="input-help">{t.fertilizerHelp}</small>
+                  <small className="input-help"><Translatable>Whether you use chemical or organic fertilizers</Translatable></small>
                 </div>
-                
+
                 <div className="form-group">
-                  <label htmlFor="irrigation">{t.irrigationSystem}</label>
+                  <label htmlFor="irrigation"><Translatable>Irrigation System</Translatable></label>
                   <div className="radio-group">
                     <div className="radio-option">
                       <input
@@ -550,7 +996,7 @@ function YieldForm() {
                         checked={formData.irrigation === "Yes"}
                         onChange={handleChange}
                       />
-                      <label htmlFor="irrigation-yes">{t.yes}</label>
+                      <label htmlFor="irrigation-yes"><Translatable>Yes</Translatable></label>
                     </div>
                     <div className="radio-option">
                       <input
@@ -561,23 +1007,23 @@ function YieldForm() {
                         checked={formData.irrigation === "No"}
                         onChange={handleChange}
                       />
-                      <label htmlFor="irrigation-no">{t.no}</label>
+                      <label htmlFor="irrigation-no"><Translatable>No</Translatable></label>
                     </div>
                   </div>
-                  <small className="input-help">{t.irrigationHelp}</small>
+                  <small className="input-help"><Translatable>Whether artificial irrigation is used</Translatable></small>
                 </div>
               </div>
-              
+
               <div className="form-nav">
                 <button type="button" className="btn-prev" onClick={prevStep}>
-                  <span className="arrow">←</span> {t.back}
+                  <span className="arrow">←</span> <Translatable>Back</Translatable>
                 </button>
-                <button 
+                <button
                   type="submit"
                   className={`btn-submit ${loading ? 'loading' : ''}`}
                   disabled={loading}
                 >
-                  {loading ? t.processing : t.predictYield}
+                  {loading ? <Translatable>Processing...</Translatable> : <Translatable>Predict Yield</Translatable>}
                 </button>
               </div>
             </div>
@@ -585,561 +1031,226 @@ function YieldForm() {
 
           {step === 4 && (
             <div className="form-step result-step">
-              <h2 className="form-title">{t.resultsTitle}</h2>
+              <h2 className="form-title"><Translatable>Your yield prediction results</Translatable></h2>
               <p className="form-description">
-                {t.resultsDescription}
+                <Translatable>Based on your inputs, here's our prediction for your crop yield.</Translatable>
               </p>
-              
+
               {prediction && (
                 <div className="result success">
                   <div className="result-header">
-                    <h3>{t.resultComplete}</h3>
+                    <h3><Translatable>Prediction Complete</Translatable></h3>
                     <span className="result-icon">✓</span>
                   </div>
                   <div className="prediction-result">
                     <div className="prediction-value">{prediction}</div>
-                    <div className="prediction-unit">{t.tonsPerHectare}</div>
+                    <div className="prediction-unit"><Translatable>tons per hectare</Translatable></div>
                   </div>
                   <div className="prediction-details">
                     <div className="detail-item">
-                      <div className="detail-label">{t.crop}</div>
+                      <div className="detail-label"><Translatable>Crop</Translatable></div>
                       <div className="detail-value">{getLocalizedCropName(formData.crop)}</div>
                     </div>
                     <div className="detail-item">
-                      <div className="detail-label">{t.soil}</div>
-                      <div className="detail-value">{formData.soil_type}</div>
+                      <div className="detail-label"><Translatable>Soil</Translatable></div>
+                      <div className="detail-value"><Translatable>{formData.soil_type}</Translatable></div>
                     </div>
                     <div className="detail-item">
-                      <div className="detail-label">{t.growth}</div>
-                      <div className="detail-value">{formData.days_to_harvest} {t.days}</div>
+                      <div className="detail-label"><Translatable>Growth Period</Translatable></div>
+                      <div className="detail-value">{formData.days_to_harvest} <Translatable>days</Translatable></div>
                     </div>
                   </div>
                   <div className="prediction-more-details">
                     <div className="detail-row">
-                      <span className="detail-key">{t.temperature}:</span>
+                      <span className="detail-key"><Translatable>Temperature</Translatable>:</span>
                       <span className="detail-value">{formData.temperature}°C</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-key">{t.rainfall}:</span>
+                      <span className="detail-key"><Translatable>Rainfall</Translatable>:</span>
                       <span className="detail-value">{formData.rainfall} mm</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-key">{t.weatherCondition}:</span>
-                      <span className="detail-value">{formData.weather}</span>
+                      <span className="detail-key"><Translatable>Weather Condition</Translatable>:</span>
+                      <span className="detail-value"><Translatable>{formData.weather}</Translatable></span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-key">{t.fertilizerUsage}:</span>
-                      <span className="detail-value">{formData.fertilizer === "Yes" ? t.yes : t.no}</span>
+                      <span className="detail-key"><Translatable>Fertilizer Usage</Translatable>:</span>
+                      <span className="detail-value">{formData.fertilizer === "Yes" ? <Translatable>Yes</Translatable> : <Translatable>No</Translatable>}</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-key">{t.irrigationSystem}:</span>
-                      <span className="detail-value">{formData.irrigation === "Yes" ? t.yes : t.no}</span>
+                      <span className="detail-key"><Translatable>Irrigation System</Translatable>:</span>
+                      <span className="detail-value">{formData.irrigation === "Yes" ? <Translatable>Yes</Translatable> : <Translatable>No</Translatable>}</span>
                     </div>
                   </div>
+
+                  {/* Insights Section */}
+                  <div className="insights-section" ref={insightsRef}>
+                    <h3 className="insights-title"><Translatable>Yield Insights</Translatable></h3>
+
+                    {isInsightsLoading && (
+                      <div className="insights-loading">
+                        <div className="insights-spinner"></div>
+                        <p><Translatable>Generating insights...</Translatable></p>
+                      </div>
+                    )}
+
+                    {/* Main Insights */}
+                    {!isInsightsLoading && Object.keys(insights).length > 0 && !selectedOption && (
+                      <div className="main-insights">
+                        <div className="insights-grid">
+                          <div className="insight-card">
+                            <h4><Translatable>Yield Quality</Translatable></h4>
+                            {getRatingVisual(insights.yieldQuality)}
+                          </div>
+                          <div className="insight-card">
+                            <h4><Translatable>Profit Potential</Translatable></h4>
+                            {getRatingVisual(insights.profitPotential)}
+                          </div>
+                          <div className="insight-card">
+                            <h4><Translatable>Resource Efficiency</Translatable></h4>
+                            {getRatingVisual(insights.resourceEfficiency)}
+                          </div>
+                          <div className="insight-card">
+                            <h4><Translatable>Market Timing</Translatable></h4>
+                            {getRatingVisual(insights.marketTiming)}
+                          </div>
+                          <div className="insight-card">
+                            <h4><Translatable>Risk Factors</Translatable></h4>
+                            {getRatingVisual(insights.riskFactors)}
+                          </div>
+                        </div>
+
+                        {insights.optimizationTip && (
+                          <div className="optimization-tip">
+                            <h4><Translatable>Optimization Tip</Translatable></h4>
+                            <p><Translatable>{insights.optimizationTip}</Translatable></p>
+                          </div>
+                        )}
+
+                        {/* Options for More Information */}
+                        <div className="options-section">
+                          <h4><Translatable>Ask me about:</Translatable></h4>
+                          <div className="options-grid">
+                            <button
+                              className="option-button"
+                              onClick={() => handleOptionClick('increase')}
+                            >
+                              <Translatable>How to increase yield</Translatable>
+                            </button>
+                            <button
+                              className="option-button"
+                              onClick={() => handleOptionClick('risks')}
+                            >
+                              <Translatable>Potential risks</Translatable>
+                            </button>
+                            <button
+                              className="option-button"
+                              onClick={() => handleOptionClick('harvest')}
+                            >
+                              <Translatable>Harvesting tips</Translatable>
+                            </button>
+                            <button
+                              className="option-button"
+                              onClick={() => handleOptionClick('storage')}
+                            >
+                              <Translatable>Storage conditions</Translatable>
+                            </button>
+                            <button
+                              className="option-button"
+                              onClick={() => handleOptionClick('alternatives')}
+                            >
+                              <Translatable>Alternative crops</Translatable>
+                            </button>
+                            <button
+                              className="option-button"
+                              onClick={() => handleOptionClick('market')}
+                            >
+                              <Translatable>Market outlook</Translatable>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Option Content */}
+                    {!isInsightsLoading && selectedOption && (
+                      <div className="selected-option-content">
+                        <button
+                          className="back-button"
+                          onClick={resetOptionSelection}
+                        >
+                          ← <Translatable>Back to all options</Translatable>
+                        </button>
+
+                        {renderOptionResponse()}
+                      </div>
+                    )}
+                  </div>
+
                   <p className="result-tip">
-                    {t.resultTip.replace('{crop}', getLocalizedCropName(formData.crop))}
+                    <Translatable>Remember that these predictions are estimates based on your inputs. Actual yield may vary based on many factors including exact weather conditions, pests, and specific agricultural practices.</Translatable>
                   </p>
+
+                  <button
+                    className="restart-button"
+                    onClick={restartForm}
+                  >
+                    <Translatable>Start a new prediction</Translatable>
+                  </button>
                 </div>
               )}
-              
+
               {error && (
                 <div className="result error">
                   <div className="result-header">
-                    <h3>{t.errorTitle}</h3>
+                    <h3><Translatable>Error</Translatable></h3>
                     <span className="result-icon">!</span>
                   </div>
                   <p className="result-message">{error}</p>
                   <p className="result-tip">
-                    {t.errorTip}
+                    <Translatable>There was a problem processing your request. Please check your inputs and try again. If the problem persists, our servers might be experiencing issues.</Translatable>
                   </p>
+                  <button
+                    className="restart-button error-restart"
+                    onClick={restartForm}
+                  >
+                    <Translatable>Try again</Translatable>
+                  </button>
                 </div>
               )}
-              
-              <div className="form-nav">
-                <button type="button" className="btn-prev" onClick={prevStep}>
-                  <span className="arrow">←</span> {t.back}
-                </button>
-                <button type="button" className="btn-restart" onClick={restartForm}>
-                  {t.startNew}
-                </button>
-              </div>
+
+              {!prediction && !error && step === 4 && (
+                <div className="result-loading">
+                  <div className="loading-spinner"></div>
+                  <p><Translatable>Processing your request...</Translatable></p>
+                </div>
+              )}
             </div>
           )}
         </form>
       </div>
 
       <div className="info-card">
-        <h3>{t.infoTitle}</h3>
+        <h3><Translatable>Helpful Information</Translatable></h3>
         <div className="info-item">
-          <h4>{t.soilTypeInfo}</h4>
-          <p>{t.soilTypeDescription}</p>
+          <h4><Translatable>Soil Types</Translatable></h4>
+          <p><Translatable>Different soil types have varying water retention and nutrient profiles that impact crop growth. Sandy soils drain quickly, while clay soils retain water longer.</Translatable></p>
         </div>
         <div className="info-item">
-          <h4>{t.weatherInfo}</h4>
-          <p>{t.weatherDescription}</p>
+          <h4><Translatable>Weather Impact</Translatable></h4>
+          <p><Translatable>Weather conditions during the growing season significantly affect yield. Temperature extremes, rainfall patterns, and sunlight exposure all play crucial roles in crop development.</Translatable></p>
         </div>
         <div className="info-item">
-          <h4>{t.fertilizerInfo}</h4>
-          <p>{t.fertilizerDescription}</p>
+          <h4><Translatable>Fertilizer Benefits</Translatable></h4>
+          <p><Translatable>Proper fertilization provides essential nutrients that may be lacking in soil. Balanced fertilizer application can substantially increase yields and improve crop quality.</Translatable></p>
         </div>
         <div className="info-item">
-          <h4>{t.irrigationInfo}</h4>
-          <p>{t.irrigationDescription}</p>
+          <h4><Translatable>Irrigation Systems</Translatable></h4>
+          <p><Translatable>Irrigation ensures consistent water supply during dry periods. Modern irrigation systems can improve water use efficiency and help maintain optimal soil moisture levels.</Translatable></p>
         </div>
       </div>
-
-      {/* Add the styling */}
-      <style>{`
-        .yield-form-container {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 2rem;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-        
-        @media (min-width: 992px) {
-          .yield-form-container {
-            grid-template-columns: 3fr 2fr;
-          }
-        }
-        
-        .form-card {
-          background-color: white;
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          padding: 2rem;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .debug-info {
-          background-color: #f8f9fa;
-          padding: 10px;
-          margin-bottom: 15px;
-          border-radius: 4px;
-          font-family: monospace;
-          font-size: 12px;
-        }
-
-        .validation-alert {
-          background-color: #fffbeb;
-          border: 1px solid #fbbf24;
-          color: #92400e;
-          padding: 0.75rem;
-          border-radius: 8px;
-          margin-bottom: 1.5rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          animation: shake 0.5s ease-in-out;
-        }
-
-        .alert-icon {
-          background-color: #fbbf24;
-          color: white;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 14px;
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          50% { transform: translateX(5px); }
-          75% { transform: translateX(-5px); }
-        }
-        
-        .form-progress {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 2rem;
-        }
-        
-        .progress-step {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        
-        .step-number {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background-color: #e2e8f0;
-          color: #a0aec0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-          transition: all 0.3s ease;
-        }
-        
-        .progress-step.active .step-number {
-          background-color: #2f855a;
-          color: white;
-        }
-        
-        .step-label {
-          font-size: 0.875rem;
-          color: #718096;
-          transition: all 0.3s ease;
-        }
-        
-        .progress-step.active .step-label {
-          color: #2f855a;
-          font-weight: 500;
-        }
-        
-        .progress-line {
-          flex-grow: 1;
-          height: 2px;
-          background-color: #e2e8f0;
-          margin: 0 0.5rem;
-        }
-        
-        .form-title {
-          font-size: 1.75rem;
-          color: #2f855a;
-          margin-bottom: 0.5rem;
-        }
-        
-        .form-description {
-          color: #4a5568;
-          margin-bottom: 1.5rem;
-        }
-        
-        .form-fields {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
-
-        .result-step {
-          animation: fadeIn 0.5s ease-out;
-        }
-        
-        @media (min-width: 640px) {
-          .form-fields {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          }
-        }
-        
-        .form-group {
-          margin-bottom: 0.5rem;
-        }
-        
-        label {
-          display: block;
-          margin-bottom: 0.5rem;
-          font-weight: 500;
-          color: #2d3748;
-        }
-
-        .required {
-          color: #e53e3e;
-          margin-left: 2px;
-        }
-        
-        input, select {
-          width: 100%;
-          padding: 0.75rem;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          font-size: 1rem;
-          transition: all 0.3s ease;
-          background-color: #f7fafc;
-        }
-        
-        input:focus, select:focus {
-          outline: none;
-          border-color: #2f855a;
-          box-shadow: 0 0 0 3px rgba(47, 133, 90, 0.1);
-          background-color: white;
-        }
-        
-        .radio-group {
-          display: flex;
-          gap: 1rem;
-        }
-        
-        .radio-option {
-          display: flex;
-          align-items: center;
-        }
-        
-        .radio-option input {
-          width: auto;
-          margin-right: 0.5rem;
-        }
-        
-        .radio-option label {
-          margin: 0;
-        }
-        
-        .input-help {
-          display: block;
-          font-size: 0.75rem;
-          color: #718096;
-          margin-top: 0.25rem;
-        }
-        
-        .form-nav {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 1rem;
-        }
-        
-        .btn-prev, .btn-next, .btn-submit, .btn-restart {
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        
-        .btn-prev {
-          background-color: #edf2f7;
-          color: #4a5568;
-          border: none;
-        }
-        
-        .btn-prev:hover {
-          background-color: #e2e8f0;
-        }
-        
-        .btn-next {
-          background-color: #2f855a;
-          color: white;
-          border: none;
-        }
-        
-        .btn-next:hover {
-          background-color: #276749;
-        }
-        
-        .btn-submit {
-          background-color: #2f855a;
-          color: white;
-          border: none;
-        }
-        
-        .btn-submit:hover {
-          background-color: #276749;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-submit.loading {
-          background-color: #9ae6b4;
-          cursor: not-allowed;
-        }
-
-        .btn-restart {
-          background-color: #4299e1;
-          color: white;
-          border: none;
-        }
-
-        .btn-restart:hover {
-          background-color: #3182ce;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .arrow {
-          font-size: 1.25rem;
-        }
-        
-        .result {
-          margin-top: 1rem;
-          margin-bottom: 1rem;
-          padding: 1.5rem;
-          border-radius: 8px;
-          animation: fadeIn 0.5s ease;
-        }
-        
-        .result.success {
-          background-color: #f0fff4;
-          border: 1px solid #c6f6d5;
-        }
-        
-        .result.error {
-          background-color: #fff5f5;
-          border: 1px solid #fed7d7;
-        }
-        
-        .result-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-        
-        .result-header h3 {
-          font-size: 1.25rem;
-          color: #2d3748;
-          margin: 0;
-        }
-        
-        .result-icon {
-          width: 30px;
-          height: 30px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          font-weight: bold;
-        }
-        
-        .success .result-icon {
-          background-color: #c6f6d5;
-          color: #2f855a;
-        }
-        
-        .error .result-icon {
-          background-color: #fed7d7;
-          color: #c53030;
-        }
-        
-        .result-message {
-          margin-bottom: 0.75rem;
-          font-weight: 500;
-        }
-        
-        .prediction-result {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          margin: 1.5rem 0;
-        }
-        
-        .prediction-value {
-          font-size: 3rem;
-          font-weight: 700;
-          color: #2f855a;
-        }
-        
-        .prediction-unit {
-          font-size: 1.25rem;
-          color: #718096;
-        }
-        
-        .prediction-details {
-          display: flex;
-          justify-content: space-around;
-          margin: 1.5rem 0;
-          background-color: #e6fffa;
-          padding: 1rem;
-          border-radius: 8px;
-        }
-
-        .prediction-more-details {
-          background-color: #f0fff4;
-          border-radius: 8px;
-          padding: 1rem;
-          margin: 1.5rem 0;
-        }
-
-        .detail-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.5rem 0;
-          border-bottom: 1px dashed #c6f6d5;
-        }
-
-        .detail-row:last-child {
-          border-bottom: none;
-        }
-
-        .detail-key {
-          font-weight: 500;
-          color: #4a5568;
-        }
-
-        .detail-item {
-          text-align: center;
-        }
-        
-        .detail-label {
-          font-size: 0.875rem;
-          color: #718096;
-          margin-bottom: 0.25rem;
-        }
-        
-        .detail-value {
-          font-weight: 600;
-          color: #2d3748;
-        }
-        
-        .result-tip {
-          font-size: 0.875rem;
-          color: #718096;
-        }
-        
-        .info-card {
-          background-color: white;
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          padding: 2rem;
-        }
-        
-        .info-card h3 {
-          color: #2f855a;
-          margin-bottom: 1.5rem;
-          font-size: 1.25rem;
-        }
-        
-        .info-item {
-          margin-bottom: 1.25rem;
-        }
-        
-        .info-item h4 {
-          color: #4a5568;
-          margin-bottom: 0.5rem;
-          font-size: 1rem;
-        }
-        
-        .info-item p {
-          color: #718096;
-          font-size: 0.95rem;
-          line-height: 1.5;
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-          .form-progress {
-            margin-bottom: 1.5rem;
-          }
-          
-          .step-label {
-            font-size: 0.75rem;
-          }
-          
-          .prediction-details {
-            flex-direction: column;
-            gap: 1rem;
-          }
-        }
-      `}</style>
     </div>
   )
 }
 
 export default YieldForm
-  
