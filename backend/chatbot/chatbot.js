@@ -5,17 +5,15 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5003;
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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 ';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY?.trim();
 
-// Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt, language } = req.body;
-    
-    // Make request to OpenRouter API
+    const { prompt } = req.body;
+
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
@@ -34,27 +32,24 @@ app.post('/api/chat', async (req, res) => {
         }
       }
     );
-    
-    // Extract and return the response
-    if (response.data && 
-        response.data.choices && 
-        response.data.choices.length > 0) {
-      return res.json({
-        success: true,
-        message: response.data.choices[0].message.content
-      });
+
+    const message = response.data?.choices?.[0]?.message?.content;
+    if (message) {
+      res.json({ success: true, message });
     } else {
-      throw new Error('Invalid response from OpenRouter');
+      throw new Error('No valid response from OpenRouter');
     }
+
   } catch (error) {
-    console.error('Error in chatbot API:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get response from AI service'
-    });
+    console.error('API Error:', error?.response?.data || error.message);
+    res.status(500).json({ success: false, error: 'Failed to get response from AI service' });
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Chatbot backend is running!');
+});
+
 app.listen(PORT, () => {
-  console.log(`Chatbot server running on port ${PORT}`);
+  console.log(`✅ Chatbot server running at http://localhost:${PORT}`);
 });
