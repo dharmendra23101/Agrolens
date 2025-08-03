@@ -1,4 +1,5 @@
 import YieldForm from '../components/YieldForm'
+import Translatable from '../components/Translatable'
 
 function YieldPrediction() {
   return (
@@ -13,7 +14,9 @@ function YieldPrediction() {
         color: '#2f855a',
         marginBottom: '1.5rem',
         textAlign: 'center'
-      }}>Crop Yield Prediction</h1>
+      }}>
+        <Translatable>Crop Yield Prediction</Translatable>
+      </h1>
       <YieldForm />
     </div>
   )
