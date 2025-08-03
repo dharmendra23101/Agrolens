@@ -1,4 +1,5 @@
 import RecommendationForm from '../components/RecommendationForm'
+import Translatable from '../components/Translatable'
 
 function CropRecommendation() {
   return (
@@ -13,7 +14,9 @@ function CropRecommendation() {
         color: '#2f855a',
         marginBottom: '1.5rem',
         textAlign: 'center'
-      }}>Crop Recommendation</h1>
+      }}>
+        <Translatable>Crop Recommendation</Translatable>
+      </h1>
       <RecommendationForm />
     </div>
   )
