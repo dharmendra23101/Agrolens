@@ -3,8 +3,10 @@ import axios from 'axios'
 import { LanguageContext } from '../context/LanguageContext'
 import Translatable from '../components/Translatable'
 import '../styles/YieldForm.css';
+
 function YieldForm() {
   const { language } = useContext(LanguageContext)
+  const [isMobile, setIsMobile] = useState(false);
 
   const [formData, setFormData] = useState({
     soil_type: '',
@@ -25,6 +27,22 @@ function YieldForm() {
   const [selectedOption, setSelectedOption] = useState(null)
   const [isInsightsLoading, setIsInsightsLoading] = useState(false)
   const insightsRef = useRef(null)
+
+  // Detect mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+      console.log("Is mobile device:", mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // Generate insights when prediction is set
   useEffect(() => {
@@ -570,11 +588,61 @@ The best harvest window is ${getHarvestWindow()}.`,
     return `Don't sell immediately after harvest. Consider selling 3-4 weeks after your ${harvestMonth} harvest when supply is lower and prices are higher.`;
   };
 
+  // Helper function to sanitize numeric inputs for mobile
+  const sanitizeNumberInput = (value) => {
+    // Remove any non-numeric characters except decimal point
+    return value.replace(/[^0-9.]/g, '');
+  };
+
   // Handle form input changes
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-    setValidationError(null) // Clear validation errors when user makes changes
+    let { name, value } = e.target;
+    
+    // Special handling for numeric inputs on mobile
+    if (
+      isMobile && 
+      (name === 'rainfall' || 
+       name === 'temperature' || 
+       name === 'days_to_harvest')
+    ) {
+      value = sanitizeNumberInput(value);
+    }
+    
+    setFormData({ ...formData, [name]: value });
+    setValidationError(null); // Clear validation errors when user makes changes
   }
+
+  // Function to generate fallback prediction when API fails
+  const generateFallbackPrediction = () => {
+    // Generate a reasonable prediction based on inputs
+    const baseYield = {
+      'Rice': 3.5,
+      'Wheat': 3.2,
+      'Maize': 4.1,
+      'Cotton': 2.8,
+      'Barley': 3.0,
+      'Soybean': 2.5
+    }[formData.crop] || 3.0;
+    
+    // Adjust for soil type
+    const soilFactor = {
+      'Sandy': 0.8,
+      'Clay': 1.1,
+      'Loam': 1.2,
+      'Silt': 1.0,
+      'Peaty': 0.9,
+      'Chalky': 0.85
+    }[formData.soil_type] || 1.0;
+    
+    // Adjust for other factors
+    const fertilizerFactor = formData.fertilizer === 'Yes' ? 1.15 : 0.9;
+    const irrigationFactor = formData.irrigation === 'Yes' ? 1.2 : 0.85;
+    
+    // Calculate final yield
+    const finalYield = (baseYield * soilFactor * fertilizerFactor * irrigationFactor).toFixed(2);
+    
+    return finalYield;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -586,9 +654,29 @@ The best harvest window is ${getHarvestWindow()}.`,
 
     try {
       console.log("Submitting form data:", formData);
-      const response = await axios.post('http://localhost:5001/predict_yield', formData)
+      
+      // Get the base URL dynamically - using your chatbot URL for production
+      const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:5001' 
+        : 'https://agrochatbot.onrender.com'; // Your actual production API URL
+      
+      // URL for the yield prediction API endpoint
+      const predictionUrl = `${baseUrl}/predict_yield`;
+      
+      console.log("Using API URL:", predictionUrl);
+      
+      const response = await axios.post(predictionUrl, formData, {
+        // Add timeout to prevent hanging requests
+        timeout: 20000,
+        // Ensure proper headers for cross-origin requests
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
       console.log("API response:", response.data);
-
+      
       if (response.data && response.data.prediction) {
         setPrediction(response.data.prediction)
         // Force step update to 4 directly instead of using nextStep function
@@ -598,8 +686,47 @@ The best harvest window is ${getHarvestWindow()}.`,
       }
     } catch (err) {
       console.error("API Error:", err);
-      setError(err.response?.data?.error || err.message || 'An error occurred')
-      // Stay on step 3 when there's an error
+      
+      // Check if user is offline or if there's a timeout
+      if (!navigator.onLine || (err.code && err.code === 'ECONNABORTED')) {
+        // Provide a fallback prediction
+        const fallbackPrediction = generateFallbackPrediction();
+        console.log("Using fallback prediction:", fallbackPrediction);
+        setPrediction(fallbackPrediction);
+        setStep(4);
+        setError("Using estimated prediction. We couldn't connect to our prediction server. This is an approximate result.");
+      } else {
+        // Provide more detailed error messages for debugging
+        let errorMessage = 'An error occurred while connecting to the server';
+        
+        if (err.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          errorMessage = `Server error: ${err.response.status} - ${err.response.data?.error || err.message}`;
+          console.log("Response error:", err.response);
+        } else if (err.request) {
+          // The request was made but no response was received
+          errorMessage = 'No response received from server. Please check your connection or try again later.';
+          console.log("Request error:", err.request);
+          
+          // If the request was made but no response received, it might be a CORS issue or server unavailability
+          // Provide a fallback prediction after 3 seconds
+          setTimeout(() => {
+            if (!prediction) {
+              const fallbackPrediction = generateFallbackPrediction();
+              console.log("Using delayed fallback prediction:", fallbackPrediction);
+              setPrediction(fallbackPrediction);
+              setStep(4);
+              setError("Using estimated prediction due to server timeout. This is an approximate result.");
+            }
+          }, 3000);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          errorMessage = `Request error: ${err.message}`;
+        }
+        
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false)
     }
@@ -862,6 +989,7 @@ The best harvest window is ${getHarvestWindow()}.`,
                     onChange={handleChange}
                     placeholder="60-150"
                     required
+                    inputMode="numeric" // Better for mobile numeric input
                   />
                   <small className="input-help"><Translatable>Estimated number of days from planting to harvest</Translatable></small>
                 </div>
@@ -896,6 +1024,7 @@ The best harvest window is ${getHarvestWindow()}.`,
                     onChange={handleChange}
                     placeholder="0-500"
                     required
+                    inputMode="numeric" // Better for mobile numeric input
                   />
                   <small className="input-help"><Translatable>Average rainfall in millimeters</Translatable></small>
                 </div>
@@ -912,6 +1041,7 @@ The best harvest window is ${getHarvestWindow()}.`,
                     onChange={handleChange}
                     placeholder="10-40"
                     required
+                    inputMode="numeric" // Better for mobile numeric input
                   />
                   <small className="input-help"><Translatable>Average temperature in degrees Celsius</Translatable></small>
                 </div>
@@ -1042,6 +1172,13 @@ The best harvest window is ${getHarvestWindow()}.`,
                     <h3><Translatable>Prediction Complete</Translatable></h3>
                     <span className="result-icon">✓</span>
                   </div>
+                  
+                  {error && (
+                    <div className="prediction-warning">
+                      <p>{error}</p>
+                    </div>
+                  )}
+                  
                   <div className="prediction-result">
                     <div className="prediction-value">{prediction}</div>
                     <div className="prediction-unit"><Translatable>tons per hectare</Translatable></div>
@@ -1200,7 +1337,7 @@ The best harvest window is ${getHarvestWindow()}.`,
                 </div>
               )}
 
-              {error && (
+              {error && !prediction && (
                 <div className="result error">
                   <div className="result-header">
                     <h3><Translatable>Error</Translatable></h3>
