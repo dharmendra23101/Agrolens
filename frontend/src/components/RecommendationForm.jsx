@@ -3,8 +3,10 @@ import axios from 'axios'
 import { LanguageContext } from '../context/LanguageContext'
 import Translatable from '../components/Translatable'
 import '../styles/RecommendationForm.css';
+
 function RecommendationForm() {
   const { language } = useContext(LanguageContext);
+  const [isMobile, setIsMobile] = useState(false);
   
   const [formData, setFormData] = useState({
     N: '',
@@ -25,6 +27,22 @@ function RecommendationForm() {
   const [alternatives, setAlternatives] = useState([])
   const [insights, setInsights] = useState({})
   const insightsRef = useRef(null)
+  
+  // Detect mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+      console.log("Is mobile device:", mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   // Parameter ranges for validation
   const paramRanges = {
@@ -60,7 +78,7 @@ function RecommendationForm() {
         cropName: crop,
         soilData: formData,
         language: language === 'hi' ? 'hindi' : 'english',
-        date: "2025-05-14" // Current date from user's context
+        date: "2025-08-03" // Current date
       };
       
       // Method 1: Try to use backend service
@@ -142,60 +160,24 @@ JSON format:
     }
     
     try {
-      // Try to use your backend API if available
-      const response = await axios.post('/api/chat', {
+      // Try to use your backend API - using the chatbot URL
+      const baseUrl = 'https://agrochatbot.onrender.com';
+      const response = await axios.post(`${baseUrl}/api/chat`, {
         prompt: prompt,
         language: promptData.language,
         responseFormat: 'json'
+      }, {
+        timeout: 15000,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       });
       
       return response.data;
     } catch (err) {
-      // If that fails, try direct OpenRouter call (not recommended for production!)
       console.error("Backend API error:", err);
-      
-      const OPENROUTER_API_KEY = 'sk-or-v1-1203ae1...';  // Replace with actual key in secure way
-      
-      const openRouterResponse = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: "nousresearch/deephermes-3-mistral-24b-preview:free",
-          messages: [
-            { 
-              role: "system", 
-              content: "You are an agricultural expert that provides concise insights in JSON format. Keep all responses extremely brief and to the point."
-            },
-            { 
-              role: "user", 
-              content: prompt 
-            }
-          ],
-          response_format: { type: "json_object" }
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'AgroLens'
-          }
-        }
-      );
-      
-      if (openRouterResponse.data && 
-          openRouterResponse.data.choices && 
-          openRouterResponse.data.choices.length > 0) {
-        try {
-          // Try to parse JSON from response
-          const content = openRouterResponse.data.choices[0].message.content;
-          return JSON.parse(content);
-        } catch (parseError) {
-          console.error("Error parsing JSON response:", parseError);
-          throw new Error("Invalid JSON response");
-        }
-      }
-      
-      throw new Error("Invalid response from OpenRouter");
+      throw new Error("API request failed");
     }
   };
   
@@ -278,6 +260,21 @@ JSON format:
             {name: "Millet", reason: "Good for water-limited areas"}
           ]
         },
+        chickpea: {
+          mainCrop: {
+            profitMargin: "medium",
+            marketDemand: "medium",
+            growthDifficulty: "low",
+            waterNeeds: "low",
+            growthTime: "medium",
+            bestPractices: "Ensure good drainage and control aphids."
+          },
+          alternatives: [
+            {name: "Lentil", reason: "Similar growing conditions"},
+            {name: "Mung Bean", reason: "Faster harvest time"},
+            {name: "Mustard", reason: "Good rotation crop"}
+          ]
+        },
         apple: {
           mainCrop: {
             profitMargin: "high",
@@ -338,6 +335,21 @@ JSON format:
             {name: "सूरजमुखी", reason: "समान विकास आवश्यकताएं"},
             {name: "ज्वार", reason: "अधिक सूखा प्रतिरोधी"},
             {name: "बाजरा", reason: "सीमित पानी वाले क्षेत्रों के लिए अच्छा"}
+          ]
+        },
+        chickpea: {
+          mainCrop: {
+            profitMargin: "मध्यम",
+            marketDemand: "मध्यम",
+            growthDifficulty: "निम्न",
+            waterNeeds: "निम्न",
+            growthTime: "मध्यम",
+            bestPractices: "अच्छा जल निकास सुनिश्चित करें और एफिड्स को नियंत्रित करें।"
+          },
+          alternatives: [
+            {name: "मसूर", reason: "समान उगाने की स्थितियां"},
+            {name: "मूंग", reason: "तेज़ फसल समय"},
+            {name: "सरसों", reason: "अच्छी रोटेशन फसल"}
           ]
         },
         apple: {
@@ -402,6 +414,41 @@ JSON format:
     setAlternatives(alternativeCrops);
   };
   
+  // Helper function to sanitize numeric inputs for mobile
+  const sanitizeNumberInput = (value) => {
+    // Remove any non-numeric characters except decimal point
+    return value.replace(/[^0-9.]/g, '');
+  };
+  
+  // Function to generate fallback prediction when API fails
+  const generateFallbackPrediction = () => {
+    // Based on soil parameters, determine the most suitable crop
+    const N = parseFloat(formData.N);
+    const P = parseFloat(formData.P);
+    const K = parseFloat(formData.K);
+    const temp = parseFloat(formData.temperature);
+    const humidity = parseFloat(formData.humidity);
+    const ph = parseFloat(formData.ph);
+    const rainfall = parseFloat(formData.rainfall);
+    
+    // Simple decision tree for crop recommendation
+    if (N > 100 && rainfall > 200) {
+      return "Rice";
+    } else if (N < 60 && P > 100 && ph > 7) {
+      return "Chickpea";
+    } else if (temp > 30 && rainfall < 100) {
+      return "Millet";
+    } else if (ph < 6 && rainfall > 150) {
+      return "Maize";
+    } else if (K > 150 && humidity > 80) {
+      return "Cotton";
+    } else if (P > 80 && humidity < 60) {
+      return "Wheat";
+    } else {
+      return "Soybean"; // Default fallback
+    }
+  };
+  
   // Handle option selection
   const handleOptionClick = async (option) => {
     setSelectedOption(option);
@@ -447,7 +494,7 @@ JSON format:
         subtitle3: "Easiest for beginners: " + getEasiestCrop()
       },
       demand: {
-        title: "Market Demand (May 2025)",
+        title: "Market Demand (August 2025)",
         subtitle1: prediction + ": " + (insights.marketDemand || 'Medium'),
         content1: [],
         subtitle2: alternatives.map(alt => alt.name + ": " + getRandomDemand(alt.name)).join("\n"),
@@ -566,14 +613,23 @@ JSON format:
 
   // Reset validation errors when form changes
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
+    let { name, value } = e.target;
+    
+    // Special handling for numeric inputs on mobile
+    if (
+      isMobile && 
+      ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall'].includes(name)
+    ) {
+      value = sanitizeNumberInput(value);
+    }
+    
+    setFormData({ ...formData, [name]: value });
     
     // Clear the specific validation error when field is changed
     if (validationErrors[name]) {
-      const newErrors = { ...validationErrors }
-      delete newErrors[name]
-      setValidationErrors(newErrors)
+      const newErrors = { ...validationErrors };
+      delete newErrors[name];
+      setValidationErrors(newErrors);
     }
   }
 
@@ -625,12 +681,75 @@ JSON format:
     setSelectedOption(null)
     
     try {
-      const response = await axios.post('http://localhost:5002/predict_crop', formData)
-      setPrediction(response.data.crop)
-      setShowResults(true)
-      // Insights will be auto-generated via useEffect
+      // Get the base URL dynamically
+      const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:5002' 
+        : 'https://crop-recommendation-api-393g.onrender.com';
+      
+      console.log("Using API URL:", baseUrl);
+      
+      const response = await axios.post(`${baseUrl}/predict_crop`, formData, {
+        // Add timeout to prevent hanging requests
+        timeout: 20000,
+        // Ensure proper headers for cross-origin requests
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log("API response:", response.data);
+      
+      if (response.data && response.data.crop) {
+        setPrediction(response.data.crop)
+        setShowResults(true)
+        // Insights will be auto-generated via useEffect
+      } else {
+        throw new Error("Invalid response format from API")
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred while processing your request')
+      console.error("API Error:", err);
+      
+      // Check if user is offline or if there's a timeout
+      if (!navigator.onLine || (err.code && err.code === 'ECONNABORTED')) {
+        // Provide a fallback prediction
+        const fallbackPrediction = generateFallbackPrediction();
+        console.log("Using fallback prediction:", fallbackPrediction);
+        setPrediction(fallbackPrediction);
+        setShowResults(true);
+        setError("Using estimated recommendation. We couldn't connect to our prediction server. This is an approximate result.");
+      } else {
+        // Provide more detailed error messages for debugging
+        let errorMessage = 'An error occurred while connecting to the server';
+        
+        if (err.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          errorMessage = `Server error: ${err.response.status} - ${err.response.data?.error || err.message}`;
+          console.log("Response error:", err.response);
+        } else if (err.request) {
+          // The request was made but no response was received
+          errorMessage = 'No response received from server. Please check your connection or try again later.';
+          console.log("Request error:", err.request);
+          
+          // If the request was made but no response received, it might be a CORS issue or server unavailability
+          // Provide a fallback prediction after 3 seconds
+          setTimeout(() => {
+            if (!prediction && !showResults) {
+              const fallbackPrediction = generateFallbackPrediction();
+              console.log("Using delayed fallback prediction:", fallbackPrediction);
+              setPrediction(fallbackPrediction);
+              setShowResults(true);
+              setError("Using estimated recommendation due to server timeout. This is an approximate result.");
+            }
+          }, 3000);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          errorMessage = `Request error: ${err.message}`;
+        }
+        
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false)
     }
@@ -764,6 +883,7 @@ JSON format:
                   placeholder="0-140"
                   className={getInputClass('N')}
                   required
+                  inputMode="numeric" // Better for mobile numeric input
                 />
                 <small className="input-help"><Translatable>Typical range: 0-140 mg/kg</Translatable></small>
                 {validationErrors.N && <div className="field-error">{validationErrors.N}</div>}
@@ -782,6 +902,7 @@ JSON format:
                   placeholder="5-145"
                   className={getInputClass('P')}
                   required
+                  inputMode="numeric" // Better for mobile numeric input
                 />
                 <small className="input-help"><Translatable>Typical range: 5-145 mg/kg</Translatable></small>
                 {validationErrors.P && <div className="field-error">{validationErrors.P}</div>}
@@ -800,6 +921,7 @@ JSON format:
                   placeholder="5-205"
                   className={getInputClass('K')}
                   required
+                  inputMode="numeric" // Better for mobile numeric input
                 />
                 <small className="input-help"><Translatable>Typical range: 5-205 mg/kg</Translatable></small>
                 {validationErrors.K && <div className="field-error">{validationErrors.K}</div>}
@@ -818,6 +940,7 @@ JSON format:
                   placeholder="8-45"
                   className={getInputClass('temperature')}
                   required
+                  inputMode="numeric" // Better for mobile numeric input
                 />
                 <small className="input-help"><Translatable>Typical range: 8-45 °C</Translatable></small>
                 {validationErrors.temperature && <div className="field-error">{validationErrors.temperature}</div>}
@@ -836,6 +959,7 @@ JSON format:
                   placeholder="14-100"
                   className={getInputClass('humidity')}
                   required
+                  inputMode="numeric" // Better for mobile numeric input
                 />
                 <small className="input-help"><Translatable>Typical range: 14-100%</Translatable></small>
                 {validationErrors.humidity && <div className="field-error">{validationErrors.humidity}</div>}
@@ -855,6 +979,7 @@ JSON format:
                   step="0.1"
                   className={getInputClass('ph')}
                   required
+                  inputMode="numeric" // Better for mobile numeric input
                 />
                 <small className="input-help"><Translatable>Typical range: 3.5-10</Translatable></small>
                 {validationErrors.ph && <div className="field-error">{validationErrors.ph}</div>}
@@ -873,6 +998,7 @@ JSON format:
                   placeholder="20-300"
                   className={getInputClass('rainfall')}
                   required
+                  inputMode="numeric" // Better for mobile numeric input
                 />
                 <small className="input-help"><Translatable>Typical range: 20-300 mm</Translatable></small>
                 {validationErrors.rainfall && <div className="field-error">{validationErrors.rainfall}</div>}
@@ -895,6 +1021,13 @@ JSON format:
                   <h3><Translatable>Recommendation</Translatable></h3>
                   <span className="result-icon">✓</span>
                 </div>
+                
+                {error && (
+                  <div className="prediction-warning">
+                    <p>{error}</p>
+                  </div>
+                )}
+                
                 <p className="result-message"><Translatable>Based on your input, we recommend growing:</Translatable></p>
                 <div className="crop-result">{getLocalizedCropName(prediction)}</div>
                 
@@ -1066,7 +1199,7 @@ JSON format:
               </div>
             )}
             
-            {error && (
+            {error && !prediction && (
               <div className="result error">
                 <div className="result-header">
                   <h3><Translatable>Error</Translatable></h3>
