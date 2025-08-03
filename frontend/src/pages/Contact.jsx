@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Translatable from '../components/Translatable'
 
 function Contact() {
   const [formData, setFormData] = useState({
@@ -32,24 +33,28 @@ function Contact() {
   return (
     <div className="contact-page">
       <div className="contact-header">
-        <h1>Contact Us</h1>
+        <h1><Translatable>Contact Us</Translatable></h1>
         <p>
-          Have questions about AgroLens? We're here to help you optimize your farming operations.
+          <Translatable>
+            Have questions about AgroLens? We're here to help you optimize your farming operations.
+          </Translatable>
         </p>
       </div>
       
       <div className="contact-container">
         <div className="contact-info">
-          <h2>Get In Touch</h2>
+          <h2><Translatable>Get In Touch</Translatable></h2>
           <p>
-            Fill out the form and our team will get back to you within 24 hours.
+            <Translatable>
+              Fill out the form and our team will get back to you within 24 hours.
+            </Translatable>
           </p>
           
           <div className="contact-methods">
             <div className="contact-method">
               <div className="method-icon">📧</div>
               <div className="method-details">
-                <h3>Email</h3>
+                <h3><Translatable>Email</Translatable></h3>
                 <p>info@agrolens.com</p>
               </div>
             </div>
@@ -57,7 +62,7 @@ function Contact() {
             <div className="contact-method">
               <div className="method-icon">📱</div>
               <div className="method-details">
-                <h3>Phone</h3>
+                <h3><Translatable>Phone</Translatable></h3>
                 <p>+1 (123) 456-7890</p>
               </div>
             </div>
@@ -65,25 +70,33 @@ function Contact() {
             <div className="contact-method">
               <div className="method-icon">📍</div>
               <div className="method-details">
-                <h3>Office</h3>
-                <p>123 AgriTech Park, Suite 101<br />Silicon Valley, CA 94088</p>
+                <h3><Translatable>Office</Translatable></h3>
+                <p>
+                  <Translatable>
+                    123 AgriTech Park, Suite 101
+                  </Translatable>
+                  <br />
+                  <Translatable>
+                    Silicon Valley, CA 94088
+                  </Translatable>
+                </p>
               </div>
             </div>
           </div>
           
           <div className="operating-hours">
-            <h3>Operating Hours</h3>
-            <p>Monday - Friday: 9:00 AM - 5:00 PM</p>
-            <p>Saturday: 10:00 AM - 2:00 PM</p>
-            <p>Sunday: Closed</p>
+            <h3><Translatable>Operating Hours</Translatable></h3>
+            <p><Translatable>Monday - Friday: 9:00 AM - 5:00 PM</Translatable></p>
+            <p><Translatable>Saturday: 10:00 AM - 2:00 PM</Translatable></p>
+            <p><Translatable>Sunday: Closed</Translatable></p>
           </div>
         </div>
         
         <div className="contact-form-container">
-          <h2>Send Us a Message</h2>
+          <h2><Translatable>Send Us a Message</Translatable></h2>
           <form onSubmit={handleSubmit} className="contact-form">
             <div className="form-group">
-              <label htmlFor="name">Your Name</label>
+              <label htmlFor="name"><Translatable>Your Name</Translatable></label>
               <input
                 type="text"
                 id="name"
@@ -95,7 +108,7 @@ function Contact() {
             </div>
             
             <div className="form-group">
-              <label htmlFor="email">Email Address</label>
+              <label htmlFor="email"><Translatable>Email Address</Translatable></label>
               <input
                 type="email"
                 id="email"
@@ -107,7 +120,7 @@ function Contact() {
             </div>
             
             <div className="form-group">
-              <label htmlFor="subject">Subject</label>
+              <label htmlFor="subject"><Translatable>Subject</Translatable></label>
               <input
                 type="text"
                 id="subject"
@@ -119,7 +132,7 @@ function Contact() {
             </div>
             
             <div className="form-group">
-              <label htmlFor="message">Your Message</label>
+              <label htmlFor="message"><Translatable>Your Message</Translatable></label>
               <textarea
                 id="message"
                 name="message"
@@ -135,12 +148,17 @@ function Contact() {
               className={`submit-button ${formStatus === 'sending' ? 'loading' : ''}`}
               disabled={formStatus === 'sending'}
             >
-              {formStatus === 'sending' ? 'Sending...' : 'Send Message'}
+              {formStatus === 'sending' ? 
+                <Translatable>Sending...</Translatable> : 
+                <Translatable>Send Message</Translatable>
+              }
             </button>
             
             {formStatus === 'success' && (
               <div className="form-success">
-                <p>✓ Your message has been sent successfully! We'll get back to you soon.</p>
+                <p>
+                  ✓ <Translatable>Your message has been sent successfully! We'll get back to you soon.</Translatable>
+                </p>
               </div>
             )}
           </form>
@@ -148,37 +166,45 @@ function Contact() {
       </div>
       
       <div className="faq-section">
-        <h2>Frequently Asked Questions</h2>
+        <h2><Translatable>Frequently Asked Questions</Translatable></h2>
         <div className="faq-grid">
           <div className="faq-item">
-            <h3>How accurate are the crop predictions?</h3>
+            <h3><Translatable>How accurate are the crop predictions?</Translatable></h3>
             <p>
-              Our AI models have been trained on extensive agricultural datasets and typically 
-              achieve 85-90% accuracy in predicting crop yields and recommendations under normal conditions.
+              <Translatable>
+                Our AI models have been trained on extensive agricultural datasets and typically 
+                achieve 85-90% accuracy in predicting crop yields and recommendations under normal conditions.
+              </Translatable>
             </p>
           </div>
           
           <div className="faq-item">
-            <h3>Do you offer consultations for large farms?</h3>
+            <h3><Translatable>Do you offer consultations for large farms?</Translatable></h3>
             <p>
-              Yes, we offer personalized consultations for large-scale agricultural operations. 
-              Please contact us directly to discuss your specific requirements.
+              <Translatable>
+                Yes, we offer personalized consultations for large-scale agricultural operations. 
+                Please contact us directly to discuss your specific requirements.
+              </Translatable>
             </p>
           </div>
           
           <div className="faq-item">
-            <h3>Is my data secure?</h3>
+            <h3><Translatable>Is my data secure?</Translatable></h3>
             <p>
-              Absolutely. We use industry-standard encryption and security protocols to ensure 
-              your data remains private and protected at all times.
+              <Translatable>
+                Absolutely. We use industry-standard encryption and security protocols to ensure 
+                your data remains private and protected at all times.
+              </Translatable>
             </p>
           </div>
           
           <div className="faq-item">
-            <h3>Can I integrate AgroLens with other farming systems?</h3>
+            <h3><Translatable>Can I integrate AgroLens with other farming systems?</Translatable></h3>
             <p>
-              Yes, we offer API integration with many popular farming management systems. 
-              Contact our technical team for integration details.
+              <Translatable>
+                Yes, we offer API integration with many popular farming management systems. 
+                Contact our technical team for integration details.
+              </Translatable>
             </p>
           </div>
         </div>
@@ -413,6 +439,24 @@ function Contact() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Additional styling for Translatable components */
+        .translating {
+          position: relative;
+          display: inline-block;
+        }
+        
+        h1 .translating, h2 .translating, h3 .translating {
+          display: inline-block;
+        }
+        
+        button .translating {
+          display: inline;
+        }
+        
+        p .translating {
+          display: inline;
         }
       `}</style>
     </div>
