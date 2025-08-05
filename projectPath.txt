@@ -1,0 +1,58 @@
+AgroLens/
+├── backend/
+│   ├── chatbot/
+│   │   ├── chatbot.js
+│   │   ├── package-lock.json
+│   │   └── package.json
+│   ├── yield_prediction/
+│   │   ├── models/
+│   │   │   └── crop_yield_model.pkl
+│   │   ├── app.py
+│   │   └── requirements.txt
+│   ├── recommendation/
+│   │   ├── model/
+│   │   │   ├── multi_target_forest.pkl
+│   │   │   ├── label_encoder.pkl
+│   │   │   └── classes.npy
+│   │   ├── app.py
+│   │   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── YieldForm.jsx
+│   │   │   ├── Translatable.jsx
+│   │   │   └── RecommendationForm.jsx
+│   │   ├── context/
+│   │   │   └── LanguageContext.jsx
+│   │   ├── hookd/
+│   │   │   └── useTranslation.js
+│   │   ├── pages/
+│   │   │   ├── Home.jsx
+│   │   │   ├── Weather.jsx
+│   │   │   ├── Contact.jsx
+│   │   │   ├── YieldPrediction.jsx
+│   │   │   └── CropRecommendation.jsx
+│   │   ├── services/
+│   │   │   └── translationService.js
+│   │   ├── styles/
+│   │   │   ├── Footer.css
+│   │   │   ├── Home.css
+│   │   │   ├── RecommendationForm.css
+│   │   │   ├── Weather.css
+│   │   │   └── YieldForm.css
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.jsx
+│   │   └── main.jsx
+│   ├── public/
+│   ├── package.json
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   └── .eslintrc.cjs
+├── README.md
+└── setup.ps1
