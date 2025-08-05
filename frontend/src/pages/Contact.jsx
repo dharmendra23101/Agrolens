@@ -1,33 +1,50 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { saveContactMessage } from '../services/adminService'
 import Translatable from '../components/Translatable'
 
 function Contact() {
+  const { currentUser } = useAuth()
+  const navigate = useNavigate()
+  
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    name: currentUser?.displayName || '',
+    email: currentUser?.email || '',
     subject: '',
     message: ''
   })
   const [formStatus, setFormStatus] = useState(null)
+  const [error, setError] = useState('')
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setFormStatus('sending')
+    setError('')
     
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Save message to Firestore
+      await saveContactMessage({
+        ...formData,
+        userId: currentUser?.uid || null
+      })
+      
       setFormStatus('success')
       setFormData({
-        name: '',
-        email: '',
+        name: currentUser?.displayName || '',
+        email: currentUser?.email || '',
         subject: '',
         message: ''
       })
-    }, 1500)
+    } catch (err) {
+      console.error('Error submitting contact form:', err)
+      setError('Failed to send message. Please try again.')
+      setFormStatus('error')
+    }
   }
 
   return (
@@ -95,6 +112,12 @@ function Contact() {
         <div className="contact-form-container">
           <h2><Translatable>Send Us a Message</Translatable></h2>
           <form onSubmit={handleSubmit} className="contact-form">
+            {error && (
+              <div className="form-error">
+                <p>{error}</p>
+              </div>
+            )}
+            
             <div className="form-group">
               <label htmlFor="name"><Translatable>Your Name</Translatable></label>
               <input
@@ -391,6 +414,20 @@ function Contact() {
         
         .form-success p {
           color: #2f855a;
+          margin: 0;
+          text-align: center;
+        }
+        
+        .form-error {
+          padding: 1rem;
+          background-color: #fff5f5;
+          border: 1px solid #fed7d7;
+          border-radius: 8px;
+          animation: fadeIn 0.5s ease;
+        }
+        
+        .form-error p {
+          color: #c53030;
           margin: 0;
           text-align: center;
         }
