@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import Translatable from './Translatable';
 
 function Navbar() {
@@ -8,6 +9,8 @@ function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { language, changeLanguage, isLoading, availableLanguages } = useContext(LanguageContext);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const { currentUser, isAuthenticated, isAdmin } = useAuth();
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -32,11 +35,14 @@ function Navbar() {
     };
   }, [isMobileMenuOpen]);
 
-  // Close the language dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isLanguageDropdownOpen && !event.target.closest('.language-selector')) {
         setIsLanguageDropdownOpen(false);
+      }
+      if (isUserDropdownOpen && !event.target.closest('.user-menu')) {
+        setIsUserDropdownOpen(false);
       }
     };
     
@@ -44,7 +50,7 @@ function Navbar() {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [isLanguageDropdownOpen]);
+  }, [isLanguageDropdownOpen, isUserDropdownOpen]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -55,8 +61,15 @@ function Navbar() {
   };
 
   const toggleLanguageDropdown = (e) => {
-    e.stopPropagation(); // Prevent event bubbling to parent elements
+    e.stopPropagation(); // Prevent event bubbling
     setIsLanguageDropdownOpen(!isLanguageDropdownOpen);
+    setIsUserDropdownOpen(false);
+  };
+
+  const toggleUserDropdown = (e) => {
+    e.stopPropagation(); // Prevent event bubbling
+    setIsUserDropdownOpen(!isUserDropdownOpen);
+    setIsLanguageDropdownOpen(false);
   };
 
   const handleLanguageChange = (selectedLanguage) => {
@@ -69,6 +82,11 @@ function Navbar() {
   const getCurrentLanguageName = () => {
     const currentLang = availableLanguages.find(lang => lang.code === language);
     return currentLang ? currentLang.name : 'English';
+  };
+
+  // Get user display name or email
+  const getUserDisplayName = () => {
+    return currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : '');
   };
 
   return (
@@ -97,7 +115,7 @@ function Navbar() {
               <Translatable>Weather</Translatable>
             </Link>
             
-            {/* Language selector desktop view */}
+            {/* Language selector */}
             <div className="language-selector">
               <button 
                 className="language-toggle" 
@@ -126,12 +144,94 @@ function Navbar() {
               )}
             </div>
             
-            <Link to="/contact" className="nav-link contact-btn" onClick={closeMobileMenu}>
-              <Translatable>Contact Us</Translatable>
-            </Link>
+            
+            {/* User menu or auth buttons */}
+            {isAuthenticated ? (
+              <div className="user-menu">
+                <button 
+                  className="user-toggle" 
+                  onClick={toggleUserDropdown}
+                  aria-label="User menu"
+                >
+                  {currentUser?.photoURL ? (
+                    <img 
+                      src={currentUser.photoURL} 
+                      alt="Profile" 
+                      className="user-avatar" 
+                    />
+                  ) : (
+                    <div className="user-avatar-placeholder">
+                      {getUserDisplayName().charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="user-name">{getUserDisplayName()}</span>
+                  <span className="dropdown-arrow">▼</span>
+                </button>
+                
+                
+{isUserDropdownOpen && (
+  <div className="user-dropdown">
+    {isAdmin && (
+      <Link 
+        to="/admin" 
+        className="dropdown-item"
+        onClick={() => {
+          setIsUserDropdownOpen(false);
+          closeMobileMenu();
+        }}
+      >
+        <span className="dropdown-icon">⚙️</span>
+        <Translatable>Admin Dashboard</Translatable>
+      </Link>
+    )}
+    <Link 
+      to="/profile" 
+      className="dropdown-item"
+      onClick={() => {
+        setIsUserDropdownOpen(false);
+        closeMobileMenu();
+      }}
+    >
+      <span className="dropdown-icon">👤</span>
+      <Translatable>My Profile</Translatable>
+    </Link>
+    
+    <Link 
+      to="/contact" 
+      className="dropdown-item"
+      onClick={() => {
+        setIsUserDropdownOpen(false);
+        closeMobileMenu();
+      }}
+    >
+      <span className="dropdown-icon">📞</span>
+      <Translatable>Contact Us</Translatable>
+    </Link>
+  </div>
+)}
+              </div>
+            ) : (
+              <div className="auth-buttons">
+                <Link 
+                  to="/login" 
+                  className="login-btn"
+                  onClick={closeMobileMenu}
+                >
+                  <Translatable>Log In</Translatable>
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="register-btn"
+                  onClick={closeMobileMenu}
+                >
+                  <Translatable>Sign Up</Translatable>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </nav>
+      
 
       {/* Translation loading indicator */}
       {isLoading && (
@@ -145,7 +245,7 @@ function Navbar() {
         <div className="mobile-menu-overlay" onClick={closeMobileMenu}></div>
       )}
 
-      <style>{`
+      <style jsx>{`
         .navbar {
           background: rgba(255, 255, 255, 0.95);
           padding: 1rem 2rem;
@@ -323,28 +423,133 @@ function Navbar() {
           font-weight: 500;
         }
         
-        .contact-btn {
+        /* User menu styles */
+        .user-menu {
+          position: relative;
+          z-index: 100;
+        }
+        
+        .user-toggle {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: none;
+          border: 1px solid #e2e8f0;
+          padding: 0.4rem 0.8rem;
+          border-radius: 4px;
+          font-size: 0.95rem;
+          color: #555;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .user-toggle:hover {
+          background-color: #f7fafc;
+          border-color: #cbd5e0;
+        }
+        
+        .user-avatar {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+        
+        .user-avatar-placeholder {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background-color: #2f855a;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: white;
+        }
+        
+        .user-name {
+          max-width: 100px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        .user-dropdown {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          margin-top: 0.3rem;
+          background: white;
+          border-radius: 4px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          min-width: 180px;
+          animation: dropdown-fade 0.2s ease-in-out;
+        }
+        
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          width: 100%;
+          text-align: left;
+          padding: 0.7rem 1rem;
+          background: none;
+          border: none;
+          border-bottom: 1px solid #f1f1f1;
+          font-size: 0.9rem;
+          color: #4a5568;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          text-decoration: none;
+        }
+        
+        .dropdown-item:last-child {
+          border-bottom: none;
+        }
+        
+        .dropdown-item:hover {
+          background-color: #f7fafc;
+        }
+        
+        .dropdown-icon {
+          font-size: 1rem;
+        }
+        
+        /* Auth buttons styles */
+        .auth-buttons {
+          display: flex;
+          gap: 1rem;
+        }
+        
+        .login-btn {
+          color: #2f855a;
+          text-decoration: none;
+          font-size: 0.95rem;
+          font-weight: 500;
+          padding: 0.4rem 1rem;
+          border: 1px solid #2f855a;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+        }
+        
+        .login-btn:hover {
+          background-color: rgba(47, 133, 90, 0.1);
+        }
+        
+        .register-btn {
           background-color: #2f855a;
           color: white;
-          padding: 0.5rem 1.2rem;
+          text-decoration: none;
+          font-size: 0.95rem;
+          font-weight: 500;
+          padding: 0.4rem 1.2rem;
           border-radius: 4px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
         }
         
-        .contact-btn:hover {
+        .register-btn:hover {
           background-color: #276749;
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        .contact-btn::after {
-          display: none;
-        }
-        
-        .mobile-menu-overlay {
-          display: none;
         }
         
         /* Translation loading indicator */
@@ -372,6 +577,7 @@ function Navbar() {
           to { transform: rotate(360deg); }
         }
 
+        /* Mobile styles */
         @media (max-width: 992px) {
           .mobile-menu-icon {
             display: block;
@@ -438,12 +644,46 @@ function Navbar() {
             padding: 0.8rem 1rem;
           }
           
-          .contact-btn {
-            margin: 1rem 2rem;
-            width: calc(100% - 4rem);
-            display: block;
+          /* Mobile auth buttons styles */
+          .auth-buttons {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #f1f1f1;
+          }
+          
+          .login-btn, .register-btn {
+            width: 100%;
             text-align: center;
+            padding: 0.8rem;
+          }
+          
+          /* Mobile user menu styles */
+          .user-menu {
+            width: 100%;
+            border-bottom: 1px solid #f1f1f1;
+            padding: 0.5rem 2rem;
+          }
+          
+          .user-toggle {
+            width: 100%;
+            justify-content: flex-start;
+            padding: 0.5rem 0;
+            border: none;
+            font-size: 1rem;
+          }
+          
+          .user-dropdown {
+            position: static;
             box-shadow: none;
+            margin-top: 0.5rem;
+            margin-left: 1.5rem;
+            border-left: 2px solid #e2e8f0;
+          }
+          
+          .dropdown-item {
+            padding: 0.8rem 1rem;
           }
           
           .mobile-menu-overlay {
@@ -486,18 +726,15 @@ function Navbar() {
             font-size: 0.95rem;
           }
           
-          .language-selector {
+          .language-selector, 
+          .user-menu, 
+          .auth-buttons {
             padding: 0.5rem 1.5rem;
           }
           
-          .language-dropdown {
+          .language-dropdown,
+          .user-dropdown {
             margin-left: 1rem;
-          }
-          
-          .contact-btn {
-            margin: 1rem 1.5rem;
-            width: calc(100% - 3rem);
-            padding: 0.5rem 1rem;
           }
         }
         
@@ -520,11 +757,24 @@ function Navbar() {
             font-size: 0.9rem;
           }
           
-          .language-selector {
+          .language-selector, 
+          .user-menu, 
+          .auth-buttons {
             padding: 0.5rem 1.2rem;
           }
           
-          .language-toggle {
+          .language-toggle,
+          .user-toggle {
+            font-size: 0.9rem;
+          }
+          
+          .auth-buttons {
+            gap: 0.4rem;
+          }
+          
+          .login-btn, 
+          .register-btn {
+            padding: 0.7rem;
             font-size: 0.9rem;
           }
         }
