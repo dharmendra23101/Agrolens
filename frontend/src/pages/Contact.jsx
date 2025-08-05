@@ -72,7 +72,7 @@ function Contact() {
               <div className="method-icon">📧</div>
               <div className="method-details">
                 <h3><Translatable>Email</Translatable></h3>
-                <p>info@agrolens.com</p>
+                <p>dkbob3337@gmail.com</p>
               </div>
             </div>
             
@@ -80,7 +80,7 @@ function Contact() {
               <div className="method-icon">📱</div>
               <div className="method-details">
                 <h3><Translatable>Phone</Translatable></h3>
-                <p>+1 (123) 456-7890</p>
+                <p>+19 xxxxxxx848</p>
               </div>
             </div>
             
@@ -90,11 +90,11 @@ function Contact() {
                 <h3><Translatable>Office</Translatable></h3>
                 <p>
                   <Translatable>
-                    123 AgriTech Park, Suite 101
+                    Plot No. 7, Sector 24
                   </Translatable>
                   <br />
                   <Translatable>
-                    Silicon Valley, CA 94088
+                    IIIT Naya raipur, Chhattisgarh 493661
                   </Translatable>
                 </p>
               </div>
