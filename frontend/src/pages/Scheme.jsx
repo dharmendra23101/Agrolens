@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Translatable from "../components/Translatable";
 import "../styles/Scheme.css";
 
@@ -11,6 +11,22 @@ const Scheme = () => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [scrollWidth, setScrollWidth] = useState(0);
+  
+  // Scroll indicator reference
+  const scrollRef = useRef(null);
+
+  // Handle scroll for the scroll indicator
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (window.scrollY / totalHeight) * 100;
+      setScrollWidth(scrolled);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Utility: fetch JSON safely
   const fetchJson = async (url) => {
@@ -84,7 +100,7 @@ const Scheme = () => {
       }
     } catch (err) {
       console.error("Error fetching schemes:", err);
-      setError("Failed to load agricultural schemes. Please try again later.");
+      setError("Failed to load government schemes. Please try again later.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -115,63 +131,74 @@ const Scheme = () => {
   };
 
   return (
-    <div className="scheme-container">
-      <div className="scheme-header">
-        <h1 className="scheme-title">
-          <Translatable>Agricultural Schemes</Translatable>
-        </h1>
-        {lastUpdated && (
-          <p className="scheme-last-updated">
-            <Translatable>Last updated</Translatable>:{" "}
-            {formatDate(lastUpdated.toISOString())}
-          </p>
-        )}
-        <button
-          className="refresh-button"
-          onClick={handleRefresh}
-          disabled={loading || refreshing}
-        >
-          {refreshing ? "Refreshing..." : "Refresh Schemes"}
-        </button>
-      </div>
+    <>
+      {/* Scroll indicator */}
+      <div 
+        className="scroll-indicator" 
+        ref={scrollRef}
+        style={{ width: `${scrollWidth}%` }} 
+      />
+      
+      <div className="scheme-container">
+        <div className="scheme-header">
+          <h1 className="scheme-title">
+            <Translatable>Govt Schemes</Translatable>
+          </h1>
+          {lastUpdated && (
+            <p className="scheme-last-updated">
+              <Translatable>Last updated</Translatable>:{" "}
+              {formatDate(lastUpdated.toISOString())}
+            </p>
+          )}
+          <button
+            className="refresh-button"
+            onClick={handleRefresh}
+            disabled={loading || refreshing}
+          >
+            {refreshing ? "Refreshing..." : "Refresh Schemes"}
+          </button>
+        </div>
 
-      {loading ? (
-        <div className="loading-container">Loading schemes...</div>
-      ) : error ? (
-        <div className="error-container">{error}</div>
-      ) : schemes.length === 0 ? (
-        <div className="empty-state">
-          No agricultural schemes available right now.
-        </div>
-      ) : (
-        <div className="schemes-list">
-          {schemes.map((scheme, index) => (
-            <div key={index} className="scheme-card">
-              <h3>{scheme.title}</h3>
-              <p>Published: {scheme.publish_date}</p>
-              {scheme.pdf_link && (
-                <a
-                  href={scheme.pdf_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View PDF
-                </a>
-              )}
-              {scheme.website_link && (
-                <a
-                  href={scheme.website_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Visit Source Website
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+        {loading ? (
+          <div className="loading-container">Loading schemes...</div>
+        ) : error ? (
+          <div className="error-container">{error}</div>
+        ) : schemes.length === 0 ? (
+          <div className="empty-state">
+            No government schemes available right now.
+          </div>
+        ) : (
+          <div className="schemes-list">
+            {schemes.map((scheme, index) => (
+              <div key={index} className="scheme-card">
+                <h3>{scheme.title}</h3>
+                <p>Published: {scheme.publish_date}</p>
+                <div className="scheme-card-links">
+                  {scheme.pdf_link && (
+                    <a
+                      href={scheme.pdf_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View PDF
+                    </a>
+                  )}
+                  {scheme.website_link && (
+                    <a
+                      href={scheme.website_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Visit Website
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 
