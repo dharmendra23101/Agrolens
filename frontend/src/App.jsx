@@ -6,7 +6,8 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import YieldPrediction from './pages/YieldPrediction'
 import CropRecommendation from './pages/CropRecommendation'
-import Tools from './pages/Tools' // Import the new Tools page
+import Tools from './pages/Tools' 
+import Scheme from './pages/Scheme' 
 import Weather from './pages/Weather'
 import Contact from './pages/Contact'
 import Login from './pages/Login'
@@ -27,7 +28,8 @@ function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/tools" element={<Tools />} /> {/* Add the new Tools route */}
+              <Route path="/tools" element={<Tools />} /> 
+              <Route path="/Scheme" element={<Scheme />} /> 
               <Route path="/yield-prediction" element={<YieldPrediction />} />
               <Route path="/crop-recommendation" element={<CropRecommendation />} />
               <Route path="/weather" element={<Weather />} />
