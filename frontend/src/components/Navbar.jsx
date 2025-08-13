@@ -118,6 +118,10 @@ function Navbar() {
             <Link to="/" className="nav-link" onClick={closeMobileMenu}>
               <Translatable>Home</Translatable>
             </Link>
+
+            <Link to="/Scheme" className="nav-link" onClick={closeMobileMenu}>
+              <Translatable>Scheme</Translatable>
+            </Link>
             
             {/* Tools Dropdown Menu */}
             <div className="tools-menu">
