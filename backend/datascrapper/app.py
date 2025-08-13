@@ -6,23 +6,25 @@ from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
 
-# Load .env
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
-FIREBASE_URL = os.getenv("FIREBASE_URL")
-URL = os.getenv("URL")  # e.g., "https://agriwelfare.gov.in/en/Major"
-SCRAPER_LINK = os.getenv("SCRAPER_LINK")  # e.g., same as URL or your frontend URL
+FIREBASE_URL = os.getenv("FIREBASE_URL")  # should end with .json
+URL = os.getenv("URL")  # target website URL to scrape
+SCRAPER_LINK = os.getenv("SCRAPER_LINK")  # optional reference link
 
 def scrape_ministry_major_schemes():
-    """Scrape agricultural schemes from ministry website using server IP."""
+    """Scrape agricultural schemes from the ministry website."""
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                          "AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/138.0.0.0 Safari/537.36"
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/138.0.0.0 Safari/537.36"
+            )
         }
 
         response = requests.get(URL, headers=headers, timeout=15)
@@ -33,9 +35,10 @@ def scrape_ministry_major_schemes():
 
         table = soup.find("table")
         if not table:
+            print("No table found on target page.")
             return []
 
-        rows = table.find_all("tr")[1:]
+        rows = table.find_all("tr")[1:]  # skip header
         for row in rows:
             cols = row.find_all("td")
             if len(cols) < 3:
@@ -64,48 +67,49 @@ def scrape_ministry_major_schemes():
         return []
 
 def get_firebase_data():
+    """Retrieve existing data from Firebase."""
     try:
-        res = requests.get(FIREBASE_URL)
+        res = requests.get(FIREBASE_URL, timeout=10)
         if res.status_code == 200:
             return res.json()
     except Exception as e:
         print("Firebase get error:", e)
     return None
 
-def delete_firebase_data():
-    try:
-        requests.delete(FIREBASE_URL)
-    except Exception as e:
-        print("Firebase delete error:", e)
-
 def upload_to_firebase(data):
+    """Upload scraped data to Firebase."""
     payload = {
         "last_updated": datetime.now(timezone.utc).isoformat(),
         "schemes": data
     }
     try:
-        requests.put(FIREBASE_URL, json=payload)
+        res = requests.put(FIREBASE_URL, json=payload, timeout=10)
+        res.raise_for_status()
+        print("Firebase upload successful.")
     except Exception as e:
         print("Firebase upload error:", e)
 
 @app.route("/run-scraper", methods=["GET"])
 def run_scraper():
+    """Scrape and update Firebase only if data is missing or older than 12 hours."""
     firebase_data = get_firebase_data()
     needs_update = True
 
     if firebase_data and "last_updated" in firebase_data:
         try:
             last_updated = datetime.fromisoformat(firebase_data["last_updated"].replace("Z", "+00:00"))
-            age = datetime.now(timezone.utc) - last_updated
-            if age < timedelta(hours=12):
+            age_hours = (datetime.now(timezone.utc) - last_updated).total_seconds() / 3600
+            print(f"Last update was {age_hours:.2f} hours ago.")
+            if age_hours < 12:
                 needs_update = False
         except Exception as e:
             print("Date parse error:", e)
 
+    # Only scrape if needed
     if needs_update:
+        print("Scraping fresh data...")
         scraped_data = scrape_ministry_major_schemes()
         if scraped_data:
-            delete_firebase_data()
             upload_to_firebase(scraped_data)
             return jsonify({"status": "updated", "count": len(scraped_data)})
         else:
