@@ -6,18 +6,18 @@ from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env
+# Load .env
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
 FIREBASE_URL = os.getenv("FIREBASE_URL")
-URL = os.getenv("URL")  
-SCRAPER_LINK = os.getenv("SCRAPER_LINK") 
+URL = os.getenv("URL")  # e.g., "https://agriwelfare.gov.in/en/Major"
+SCRAPER_LINK = os.getenv("SCRAPER_LINK")  # e.g., same as URL or your frontend URL
 
 def scrape_ministry_major_schemes():
-    """Scrape agricultural schemes with PDF and page links using user's IP."""
+    """Scrape agricultural schemes from ministry website using server IP."""
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -35,7 +35,7 @@ def scrape_ministry_major_schemes():
         if not table:
             return []
 
-        rows = table.find_all("tr")[1:]  # skip header row
+        rows = table.find_all("tr")[1:]
         for row in rows:
             cols = row.find_all("td")
             if len(cols) < 3:
@@ -58,9 +58,7 @@ def scrape_ministry_major_schemes():
                 "website_link": SCRAPER_LINK,
                 "source_website": URL
             })
-
         return schemes
-
     except Exception as e:
         print("Scraping error:", e)
         return []
@@ -103,8 +101,6 @@ def run_scraper():
                 needs_update = False
         except Exception as e:
             print("Date parse error:", e)
-    else:
-        needs_update = True
 
     if needs_update:
         scraped_data = scrape_ministry_major_schemes()
