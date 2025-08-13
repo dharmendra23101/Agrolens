@@ -20,22 +20,34 @@ AgroLens/
 │   ├── src/
 │   │   ├── assets/
 │   │   ├── components/
+│   │   │   ├── AdminCheck.jsx
+│   │   │   ├── AdminRoute.jsx
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── Footer.jsx
+│   │   │   ├── ProtectedRoute.jsx
 │   │   │   ├── YieldForm.jsx
 │   │   │   ├── Translatable.jsx
 │   │   │   └── RecommendationForm.jsx
 │   │   ├── context/
+│   │   │   ├── AuthContext.jsx
 │   │   │   └── LanguageContext.jsx
 │   │   ├── hookd/
 │   │   │   └── useTranslation.js
 │   │   ├── pages/
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── Contact.jsx
 │   │   │   ├── Home.jsx
 │   │   │   ├── Weather.jsx
-│   │   │   ├── Contact.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── ResetPassword.jsx
+│   │   │   ├── UserProfile.jsx
 │   │   │   ├── YieldPrediction.jsx
 │   │   │   └── CropRecommendation.jsx
 │   │   ├── services/
+│   │   │   ├── adminService.js
+│   │   │   ├── authService.js
+│   │   │   ├── firebaseConfig.js
 │   │   │   └── translationService.js
 │   │   ├── styles/
 │   │   │   ├── Footer.css
@@ -43,6 +55,8 @@ AgroLens/
 │   │   │   ├── RecommendationForm.css
 │   │   │   ├── Weather.css
 │   │   │   └── YieldForm.css
+│   │   ├── utils/
+│   │   │   └── creatFirstAdmin.js
 │   │   ├── App.css
 │   │   ├── App.jsx
 │   │   ├── index.jsx
