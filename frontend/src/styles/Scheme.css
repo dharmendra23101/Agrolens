@@ -31,6 +31,47 @@
   font-size: 0.9rem;
   color: #718096;
   font-style: italic;
+  margin-bottom: 1.5rem;
+}
+
+/* Refresh Button */
+.refresh-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #2f855a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background-color: #276749;
+  transform: translateY(-1px);
+}
+
+.refresh-button:disabled {
+  background-color: #9ae6b4;
+  cursor: not-allowed;
+}
+
+.refresh-icon {
+  font-size: 1rem;
+}
+
+.spinner-icon {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
 }
 
 /* Loading State */
@@ -161,10 +202,18 @@
   font-size: 0.9rem;
   color: #718096;
   border-bottom: 1px solid #f7fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .scheme-card-date {
   display: inline-block;
+}
+
+.scheme-card-source {
+  display: inline-block;
+  word-break: break-word;
 }
 
 .scheme-card-actions {
@@ -212,50 +261,6 @@
 
 .button-icon {
   font-size: 1.1rem;
-}
-
-/* Refresh Container */
-.refresh-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 3rem;
-}
-
-.refresh-button {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  background-color: #2f855a;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.refresh-button:hover {
-  background-color: #276749;
-}
-
-.refresh-button:disabled {
-  background-color: #9ae6b4;
-  cursor: not-allowed;
-}
-
-.refresh-icon {
-  font-size: 1.1rem;
-}
-
-.loading-spinner-small {
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
 }
 
 /* Responsive Adjustments */
@@ -310,7 +315,7 @@
   }
   
   .loading-spinner,
-  .loading-spinner-small {
+  .spinner-icon {
     animation: none;
   }
 }
