@@ -6,6 +6,7 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import YieldPrediction from './pages/YieldPrediction'
 import CropRecommendation from './pages/CropRecommendation'
+import Tools from './pages/Tools' // Import the new Tools page
 import Weather from './pages/Weather'
 import Contact from './pages/Contact'
 import Login from './pages/Login'
@@ -16,6 +17,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import AdminCheck from './components/AdminCheck';
+
 function App() {
   return (
     <AuthProvider>
@@ -25,6 +27,7 @@ function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/tools" element={<Tools />} /> {/* Add the new Tools route */}
               <Route path="/yield-prediction" element={<YieldPrediction />} />
               <Route path="/crop-recommendation" element={<CropRecommendation />} />
               <Route path="/weather" element={<Weather />} />
@@ -253,4 +256,4 @@ function App() {
   ) 
 }
 
-export default App
+export default App 
