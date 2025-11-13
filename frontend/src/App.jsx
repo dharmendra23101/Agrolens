@@ -18,6 +18,8 @@ import AdminDashboard from './pages/AdminDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import AdminCheck from './components/AdminCheck';
+import AreaCropPrediction from './pages/AreaCropPrediction';
+
 
 function App() {
   return (
@@ -35,6 +37,7 @@ function App() {
               <Route path="/weather" element={<Weather />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/admin-check" element={<AdminCheck />} />
+              <Route path="/area-crop-prediction" element={<AreaCropPrediction />} />
               {/* Authentication Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
