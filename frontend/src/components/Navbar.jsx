@@ -123,46 +123,9 @@ function Navbar() {
               <Translatable>Scheme</Translatable>
             </Link>
             
-            {/* Tools Dropdown Menu */}
-            <div className="tools-menu">
-              <button
-                className="tools-toggle nav-link"
-                onClick={toggleToolsDropdown}
-                aria-label="Tools menu"
-                aria-expanded={isToolsDropdownOpen}
-              >
-                <Translatable>Tools</Translatable>
-                <span className="dropdown-arrow">▼</span>
-              </button>
-              
-              {isToolsDropdownOpen && (
-                <div className="tools-dropdown">
-                  <Link
-                    to="/yield-prediction"
-                    className="dropdown-item"
-                    onClick={() => {
-                      setIsToolsDropdownOpen(false);
-                      closeMobileMenu();
-                    }}
-                  >
-                    <span className="dropdown-icon">🌾</span>
-                    <Translatable>Yield Prediction</Translatable>
-                  </Link>
-                  <Link
-                    to="/crop-recommendation"
-                    className="dropdown-item"
-                    onClick={() => {
-                      setIsToolsDropdownOpen(false);
-                      closeMobileMenu();
-                    }}
-                  >
-                    <span className="dropdown-icon">🌱</span>
-                    <Translatable>Crop Recommendation</Translatable>
-                  </Link>
-                </div>
-              )}
-            </div>
-
+            <Link to="/tools" className="nav-link" onClick={closeMobileMenu}>
+              <Translatable>Tools</Translatable>
+            </Link>
             <Link to="/weather" className="nav-link" onClick={closeMobileMenu}>
               <Translatable>Weather</Translatable>
             </Link>
@@ -299,7 +262,7 @@ function Navbar() {
         <div className="mobile-menu-overlay" onClick={closeMobileMenu}></div>
       )}
 
-      <style jsx>{`
+      <style>{`
         /* Base styles */
 .navbar {
   background: white;
