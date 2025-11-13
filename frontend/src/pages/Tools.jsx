@@ -52,6 +52,22 @@ function Tools() {
               <Translatable>Use Tool</Translatable>
             </Link>
           </div>
+          <div className="tool-card">
+  <div className="tool-icon">🗺️</div>
+  <h2 className="tool-title">
+    <Translatable>Area Crop Prediction</Translatable>
+  </h2>
+  <p className="tool-description">
+    <Translatable>
+      Select a farming area on the map, upload crop images, and get AI predictions
+      for crop type and total production estimates.
+    </Translatable>
+  </p>
+  <Link to="/area-crop-prediction" className="tool-button">
+    <Translatable>Use Tool</Translatable>
+  </Link>
+</div>
+
         </div>
       </div>
       
