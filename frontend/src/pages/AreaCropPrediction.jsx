@@ -23,6 +23,9 @@ function AreaCropPrediction() {
   const [error, setError] = useState(null);
 
   const MAPTILER_KEY = 'bTfYcH4G9baUbfCL4HKu';
+  
+  // API Configuration - can be overridden with environment variable
+  const API_BASE_URL = import.meta.env.VITE_IMAGE_PREDICTION_API || 'http://localhost:5005';
 
   const handleMapClick = useCallback((e) => {
     if (!drawing) return;
@@ -236,7 +239,7 @@ function AreaCropPrediction() {
       formData.append('image', imageFile);
 
       // Call Flask API
-      const response = await fetch('http://localhost:5005/predict', {
+      const response = await fetch(`${API_BASE_URL}/predict`, {
         method: 'POST',
         body: formData,
       });

@@ -137,6 +137,23 @@ Error Response:
 
 The React component at `frontend/src/pages/AreaCropPrediction.jsx` is already configured to use this API.
 
+### Configuration
+
+The API URL can be configured using an environment variable:
+
+1. Copy the example env file:
+   ```bash
+   cd frontend
+   cp .env.example .env
+   ```
+
+2. Update the API URL in `.env`:
+   ```
+   VITE_IMAGE_PREDICTION_API=http://localhost:5005
+   ```
+
+For production, update this to your production API URL.
+
 ### Usage Flow:
 
 1. User selects an area on the map (3+ points)
@@ -148,10 +165,13 @@ The React component at `frontend/src/pages/AreaCropPrediction.jsx` is already co
 ### Example API Call from React:
 
 ```javascript
+// API URL is configured via environment variable
+const API_BASE_URL = import.meta.env.VITE_IMAGE_PREDICTION_API || 'http://localhost:5005';
+
 const formData = new FormData();
 formData.append('image', imageFile);
 
-const response = await fetch('http://localhost:5005/predict', {
+const response = await fetch(`${API_BASE_URL}/predict`, {
   method: 'POST',
   body: formData,
 });
