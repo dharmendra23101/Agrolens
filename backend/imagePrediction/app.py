@@ -205,4 +205,7 @@ def get_classes():
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5005, debug=True)
+    # Use environment variable to control debug mode (default: False for production safety)
+    import os
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 'yes')
+    app.run(host='0.0.0.0', port=5005, debug=debug_mode)

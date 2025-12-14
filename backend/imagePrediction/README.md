@@ -57,6 +57,13 @@ python app.py
 
 The API will start on `http://localhost:5005`
 
+**Development Mode** (enables debug features):
+```bash
+FLASK_DEBUG=True python app.py
+```
+
+**Note**: Debug mode should NEVER be enabled in production as it can expose security vulnerabilities.
+
 ## API Endpoints
 
 ### Health Check
