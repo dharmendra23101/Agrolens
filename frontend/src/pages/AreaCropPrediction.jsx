@@ -19,8 +19,13 @@ function AreaCropPrediction() {
   const [loading, setLoading] = useState(false);
   const [coordinates, setCoordinates] = useState([]);
   const [markers, setMarkers] = useState([]);
+  const [prediction, setPrediction] = useState(null);
+  const [error, setError] = useState(null);
 
   const MAPTILER_KEY = 'bTfYcH4G9baUbfCL4HKu';
+  
+  // API Configuration - can be overridden with environment variable
+  const API_BASE_URL = import.meta.env.VITE_IMAGE_PREDICTION_API || 'http://localhost:5005';
 
   const handleMapClick = useCallback((e) => {
     if (!drawing) return;
@@ -218,17 +223,44 @@ function AreaCropPrediction() {
     setShowCamera(false);
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!areaInfo || !imageFile) {
       alert('Please select an area (3+ points) and capture/upload an image!');
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      alert(`Analysis Ready!\n\nArea: ${areaInfo.km} km² (${areaInfo.hectares} hectares)`);
+    setError(null);
+    setPrediction(null);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      // Call Flask API
+      const response = await fetch(`${API_BASE_URL}/predict`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setPrediction({
+          crop: data.prediction,
+          confidence: data.confidence,
+          allPredictions: data.all_predictions
+        });
+      } else {
+        setError(data.error || 'Prediction failed');
+      }
+    } catch (err) {
+      console.error('API Error:', err);
+      setError('Failed to connect to prediction service. Please ensure the Flask server is running on port 5005.');
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -346,6 +378,96 @@ function AreaCropPrediction() {
             </div>
           </div>
         </div>
+
+        {/* PREDICTION RESULTS */}
+        {prediction && (
+          <div className="prediction-card">
+            <h2>🎯 AI Prediction Results</h2>
+            <div className="prediction-content">
+              <div className="prediction-main">
+                <div className="crop-icon">🌾</div>
+                <div className="crop-info">
+                  <h3>Detected Crop</h3>
+                  <div className="crop-name">{prediction.crop}</div>
+                  <div className="confidence-bar">
+                    <div className="confidence-label">Confidence</div>
+                    <div className="confidence-progress">
+                      <div 
+                        className="confidence-fill" 
+                        style={{ width: `${prediction.confidence * 100}%` }}
+                      ></div>
+                    </div>
+                    <div className="confidence-value">{(prediction.confidence * 100).toFixed(1)}%</div>
+                  </div>
+                </div>
+              </div>
+              
+              {areaInfo && (
+                <div className="area-summary">
+                  <h4>📐 Area Information</h4>
+                  <div className="area-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Square Kilometers:</span>
+                      <span className="stat-value">{areaInfo.km} km²</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Hectares:</span>
+                      <span className="stat-value">{areaInfo.hectares} ha</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Acres:</span>
+                      <span className="stat-value">{areaInfo.acres} acres</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {prediction.allPredictions && Object.keys(prediction.allPredictions).length > 1 && (
+                <div className="all-predictions">
+                  <h4>📊 All Predictions</h4>
+                  <div className="predictions-list">
+                    {Object.entries(prediction.allPredictions)
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 5)
+                      .map(([crop, conf]) => (
+                        <div key={crop} className="prediction-item">
+                          <span className="prediction-crop">{crop}</span>
+                          <div className="mini-bar">
+                            <div 
+                              className="mini-fill" 
+                              style={{ width: `${conf * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="prediction-conf">{(conf * 100).toFixed(1)}%</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ERROR DISPLAY */}
+        {error && (
+          <div className="error-card">
+            <div className="error-icon">⚠️</div>
+            <div className="error-content">
+              <h3>Prediction Error</h3>
+              <p>{error}</p>
+              {error.includes('port 5005') && (
+                <div className="error-help">
+                  <strong>To fix this:</strong>
+                  <ol>
+                    <li>Navigate to <code>backend/imagePrediction/</code></li>
+                    <li>Install dependencies: <code>pip install -r requirements.txt</code></li>
+                    <li>Run the server: <code>python app.py</code></li>
+                  </ol>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* COORDINATES DISPLAY */}
         {coordinates.length > 0 && (
@@ -772,6 +894,286 @@ function AreaCropPrediction() {
           line-height: 1.4;
         }
 
+        .prediction-card {
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          padding: clamp(1rem, 2.5vw, 2rem);
+          margin-bottom: 1.5rem;
+          border: 2px solid #10b981;
+          animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .prediction-card h2 {
+          color: #0c4a6e;
+          margin: 0 0 1.5rem 0;
+          font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+          font-weight: 700;
+          text-align: center;
+          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+          padding: 0.8rem;
+          border-radius: 8px;
+        }
+
+        .prediction-content {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .prediction-main {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          padding: 1.5rem;
+          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+          border-radius: 12px;
+          border: 2px solid #86efac;
+        }
+
+        .crop-icon {
+          font-size: clamp(3rem, 8vw, 5rem);
+          animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
+        .crop-info {
+          flex: 1;
+        }
+
+        .crop-info h3 {
+          color: #065f46;
+          font-size: clamp(0.9rem, 2vw, 1rem);
+          margin: 0 0 0.5rem 0;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .crop-name {
+          font-size: clamp(1.5rem, 4vw, 2.5rem);
+          font-weight: 800;
+          color: #047857;
+          margin-bottom: 1rem;
+          text-transform: capitalize;
+        }
+
+        .confidence-bar {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .confidence-label {
+          font-size: clamp(0.8rem, 2vw, 0.9rem);
+          color: #065f46;
+          font-weight: 600;
+        }
+
+        .confidence-progress {
+          height: 24px;
+          background: #d1fae5;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 2px solid #86efac;
+        }
+
+        .confidence-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+          transition: width 0.8s ease-out;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding-right: 8px;
+        }
+
+        .confidence-value {
+          font-size: clamp(1rem, 2.5vw, 1.2rem);
+          font-weight: 700;
+          color: #047857;
+          text-align: right;
+        }
+
+        .area-summary {
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          padding: 1.5rem;
+          border-radius: 12px;
+          border: 2px solid #93c5fd;
+        }
+
+        .area-summary h4 {
+          color: #1e40af;
+          margin: 0 0 1rem 0;
+          font-size: clamp(1rem, 2.5vw, 1.2rem);
+          font-weight: 700;
+        }
+
+        .area-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 1rem;
+        }
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.3rem;
+        }
+
+        .stat-label {
+          font-size: clamp(0.75rem, 1.8vw, 0.85rem);
+          color: #1e40af;
+          font-weight: 600;
+        }
+
+        .stat-value {
+          font-size: clamp(1rem, 2.5vw, 1.3rem);
+          font-weight: 800;
+          color: #0c4a6e;
+          font-family: 'Courier New', monospace;
+        }
+
+        .all-predictions {
+          background: #f8fafc;
+          padding: 1.5rem;
+          border-radius: 12px;
+          border: 2px solid #e2e8f0;
+        }
+
+        .all-predictions h4 {
+          color: #475569;
+          margin: 0 0 1rem 0;
+          font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+          font-weight: 700;
+        }
+
+        .predictions-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+        }
+
+        .prediction-item {
+          display: grid;
+          grid-template-columns: 1fr 2fr auto;
+          align-items: center;
+          gap: 1rem;
+          padding: 0.8rem;
+          background: white;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .prediction-crop {
+          font-weight: 600;
+          color: #475569;
+          font-size: clamp(0.8rem, 2vw, 0.9rem);
+          text-transform: capitalize;
+        }
+
+        .mini-bar {
+          height: 8px;
+          background: #e2e8f0;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .mini-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+          transition: width 0.5s ease-out;
+        }
+
+        .prediction-conf {
+          font-weight: 700;
+          color: #1e40af;
+          font-size: clamp(0.8rem, 2vw, 0.9rem);
+          font-family: 'Courier New', monospace;
+        }
+
+        .error-card {
+          background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+          border-radius: 16px;
+          box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2);
+          padding: clamp(1rem, 2.5vw, 2rem);
+          margin-bottom: 1.5rem;
+          border: 2px solid #ef4444;
+          display: flex;
+          gap: 1rem;
+          animation: slideIn 0.5s ease-out;
+        }
+
+        .error-icon {
+          font-size: clamp(2rem, 5vw, 3rem);
+          flex-shrink: 0;
+        }
+
+        .error-content {
+          flex: 1;
+        }
+
+        .error-content h3 {
+          color: #991b1b;
+          margin: 0 0 0.5rem 0;
+          font-size: clamp(1rem, 2.5vw, 1.2rem);
+          font-weight: 700;
+        }
+
+        .error-content p {
+          color: #7f1d1d;
+          margin: 0 0 1rem 0;
+          font-size: clamp(0.85rem, 2vw, 0.95rem);
+          line-height: 1.5;
+        }
+
+        .error-help {
+          background: white;
+          padding: 1rem;
+          border-radius: 8px;
+          margin-top: 1rem;
+        }
+
+        .error-help strong {
+          color: #991b1b;
+          display: block;
+          margin-bottom: 0.5rem;
+        }
+
+        .error-help ol {
+          margin: 0.5rem 0 0 1.5rem;
+          padding: 0;
+        }
+
+        .error-help li {
+          color: #7f1d1d;
+          margin: 0.3rem 0;
+          font-size: clamp(0.8rem, 2vw, 0.9rem);
+        }
+
+        .error-help code {
+          background: #fee2e2;
+          padding: 0.2rem 0.4rem;
+          border-radius: 4px;
+          font-family: 'Courier New', monospace;
+          color: #991b1b;
+          font-size: clamp(0.75rem, 1.8vw, 0.85rem);
+        }
+
         .coords-section {
           background: white;
           border-radius: 16px;
@@ -955,6 +1357,25 @@ function AreaCropPrediction() {
             bottom: 8px;
             left: 8px;
             right: 8px;
+          }
+
+          .prediction-main {
+            flex-direction: column;
+            text-align: center;
+          }
+
+          .area-stats {
+            grid-template-columns: 1fr;
+          }
+
+          .prediction-item {
+            grid-template-columns: 1fr;
+            text-align: center;
+          }
+
+          .error-card {
+            flex-direction: column;
+            text-align: center;
           }
         }
 

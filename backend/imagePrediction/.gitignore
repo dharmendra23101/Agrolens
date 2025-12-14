@@ -1,0 +1,23 @@
+# Model files (can be large)
+*.keras
+*.h5
+*.pkl
+*.pb
+*.pth
+
+# Training data
+train/
+validation/
+test/
+data/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
